@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-export default function useSpeechRecognition() {
+export default function useSpeechRecognition(onFinalResult) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState(null);
@@ -15,7 +15,7 @@ export default function useSpeechRecognition() {
 
     recognitionRef.current = new SpeechRecognition();
     recognitionRef.current.continuous = false;
-    recognitionRef.current.interimResults = false;
+    recognitionRef.current.interimResults = true; // Use interim results for real-time feedback
     recognitionRef.current.lang = 'en-US';
 
     recognitionRef.current.onstart = () => {
@@ -24,14 +24,28 @@ export default function useSpeechRecognition() {
     };
 
     recognitionRef.current.onresult = (event) => {
-      const current = event.resultIndex;
-      const result = event.results[current][0].transcript;
-      setTranscript(result);
+      let currentResult = '';
+      let isFinal = false;
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        currentResult += event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          isFinal = true;
+        }
+      }
+
+      setTranscript(currentResult);
+
+      if (isFinal && onFinalResult) {
+        onFinalResult(currentResult);
+      }
     };
 
     recognitionRef.current.onerror = (event) => {
-      console.error('Speech recognition error', event.error);
-      setError(event.error);
+      if (event.error !== 'no-speech') {
+        console.error('Speech recognition error', event.error);
+        setError(event.error);
+      }
       setIsListening(false);
     };
 
@@ -48,7 +62,7 @@ export default function useSpeechRecognition() {
         }
       }
     };
-  }, []);
+  }, [onFinalResult]);
 
   const startListening = useCallback(() => {
     setTranscript('');

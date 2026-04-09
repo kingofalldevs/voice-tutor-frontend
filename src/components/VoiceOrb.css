@@ -142,12 +142,34 @@
   50% { transform: translate(-50%, -50%) scale(1.2); border-radius: 55% 45% 50% 50% / 50% 50% 55% 45%; }
 }
 
+.text-feedback {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 50px;
+}
+
 .status-text {
-  margin-top: 2.5rem;
   color: #a3a3a3;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 2px;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  margin: 0;
+}
+
+.live-transcript {
+  color: #8b5cf6;
+  font-size: 1rem;
+  font-style: italic;
+  max-width: 300px;
+  text-align: center;
+  margin: 0;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

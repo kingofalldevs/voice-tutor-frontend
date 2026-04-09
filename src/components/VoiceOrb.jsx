@@ -2,7 +2,7 @@ import React from 'react';
 import { Mic, Square, Volume2, Loader2 } from 'lucide-react';
 import './VoiceOrb.css';
 
-export default function VoiceOrb({ isListening, isSpeaking, isProcessing, onClick, error }) {
+export default function VoiceOrb({ isListening, isSpeaking, isProcessing, onClick, error, transcript }) {
   let stateClass = 'idle';
   let Icon = Mic;
   let statusText = 'Tap to speak';
@@ -41,7 +41,12 @@ export default function VoiceOrb({ isListening, isSpeaking, isProcessing, onClic
         <div className="ring ring-2"></div>
         <div className="ring ring-3"></div>
       </button>
-      <p className="status-text">{statusText}</p>
+      <div className="text-feedback">
+        <p className="status-text">{statusText}</p>
+        {isListening && transcript && (
+          <p className="live-transcript">"{transcript}..."</p>
+        )}
+      </div>
     </div>
   );
 }

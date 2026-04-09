@@ -30,14 +30,15 @@ function App() {
   // Handle Fetching Messages
   useEffect(() => {
     if (!user) return;
+    // Increased limit to 50 for better context retention
     const q = query(
       collection(db, `chats/${user.uid}/messages`),
       orderBy('timestamp', 'desc'),
-      limit(20)
+      limit(50)
     )
     const unsub = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      // Reverse to show chronological
+      // Reverse to show chronological: [oldest ... newest]
       setMessages(msgs.reverse())
     })
     return () => unsub()
@@ -55,58 +56,74 @@ function App() {
   const handleUserSpeechContent = async (text) => {
     if (!user || !text.trim()) return;
     setIsProcessing(true);
-    console.log("User said:", text);
 
     try {
-      // 1. NON-BLOCKING: Save user message to Firestore
-      // We don't await this so the conversation can proceed even if DB is slow
+      // 1. Background save user message
       addDoc(collection(db, `chats/${user.uid}/messages`), {
         role: 'user',
         content: text,
         timestamp: serverTimestamp()
-      }).catch(err => console.error("Firestore Error (User Msg):", err));
+      }).catch(err => console.error("Firestore Error:", err));
 
-      // 2. Prepare history for API (last 10 msgs)
-      const recentHistory = messages.slice(-10).map(m => ({
+      // 2. Prepare history for API (last 30 msgs for deep context)
+      const recentHistory = messages.slice(-30).map(m => ({
         role: m.role,
         content: m.content
       }));
 
-      // 3. Call backend AI
-      console.log("Calling AI API...");
+      // 3. Fetch with streaming support - passing username for personalization
       const apiUrl = import.meta.env.VITE_API_URL + '/chat';
-      const res = await fetch(apiUrl, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: recentHistory })
+        body: JSON.stringify({ 
+          message: text, 
+          history: recentHistory,
+          userName: user.displayName || 'Friend'
+        })
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Server responded with ${res.status}`);
+      if (!response.ok) throw new Error('API Error');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = '';
+      let hasSpokenFirstSentence = false;
+
+      // 3. Process the stream
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        fullReply += chunk;
+
+        // HIGH EFFICIENCY: Speak as soon as we have a full sentence or enough text
+        // This dramatically reduces perceived latency
+        if (!hasSpokenFirstSentence) {
+          const sentenceMatch = fullReply.match(/[^.!?]+[.!?]/);
+          if (sentenceMatch) {
+            speak(sentenceMatch[0].trim());
+            hasSpokenFirstSentence = true;
+          }
+        }
       }
 
-      const data = await res.json();
-      const reply = data.reply;
-      console.log("AI Replied:", reply);
+      // 4. If it was too short for a sentence or we missed it, speak the whole thing
+      if (!hasSpokenFirstSentence && fullReply) {
+        speak(fullReply);
+      }
 
-      // 4. Speak IMMEDIATELY
-      speak(reply);
-
-      // 5. NON-BLOCKING: Save assistant reply to Firestore
+      // 5. Background save AI reply
       addDoc(collection(db, `chats/${user.uid}/messages`), {
         role: 'assistant',
-        content: reply,
+        content: fullReply,
         timestamp: serverTimestamp()
-      }).catch(err => console.error("Firestore Error (AI Msg):", err));
+      }).catch(err => console.error("Firestore Error:", err));
 
     } catch (err) {
       console.error("Conversation Error:", err);
-      // More descriptive fallback errors help debugging
-      const errorMessage = err.message.includes('Failed to fetch') 
-        ? "I can't reach the server. Is the backend running?" 
-        : "I'm having trouble thinking right now.";
-      speak(errorMessage);
+      speak("I encountered a connection error.");
     } finally {
       setIsProcessing(false);
     }

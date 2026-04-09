@@ -18,17 +18,19 @@ export default function useSpeechSynthesis() {
     }
   }, []);
 
-  const speak = useCallback((text) => {
+  const speak = useCallback((text, append = false) => {
     const synth = window.speechSynthesis;
     if (!synth || !text) return;
 
-    // Cancel current speech correctly
-    synth.cancel();
+    // Only cancel if we are NOT appending to a stream
+    if (!append) {
+      synth.cancel();
+    }
 
     // Create utterance
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Voices can change/load late; get fresh list
+    // Voices
     const availableVoices = synth.getVoices();
     let englishVoices = availableVoices.filter(v => v.lang.startsWith('en'));
     
@@ -44,7 +46,12 @@ export default function useSpeechSynthesis() {
     utterance.pitch = 1.0;
 
     utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
+    utterance.onend = () => {
+      // Only set isSpeaking to false if there's nothing else pending in the queue
+      if (!synth.speaking && !synth.pending) {
+        setIsSpeaking(false);
+      }
+    };
     utterance.onerror = (e) => {
       if (e.error !== 'interrupted') {
         console.error("Speech synthesis error", e);
@@ -52,10 +59,10 @@ export default function useSpeechSynthesis() {
       setIsSpeaking(false);
     };
 
-    // ⚠️ CRITICAL FIX: Chrome requires a delay after cancel() for speak() to work
+    // Chrome workaround delay
     setTimeout(() => {
       synth.speak(utterance);
-    }, 100);
+    }, append ? 10 : 100);
   }, []);
 
   const cancel = useCallback(() => {

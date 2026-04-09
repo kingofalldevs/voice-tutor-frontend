@@ -65,13 +65,12 @@ function App() {
         timestamp: serverTimestamp()
       }).catch(err => console.error("Firestore Error:", err));
 
-      // 2. Prepare history for API (last 30 msgs for deep context)
       const recentHistory = messages.slice(-30).map(m => ({
         role: m.role,
         content: m.content
       }));
 
-      // 3. Fetch with streaming support - passing username for personalization
+      // 2. Fetch with streaming support
       const apiUrl = import.meta.env.VITE_API_URL + '/chat';
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -88,9 +87,8 @@ function App() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullReply = '';
-      let hasSpokenFirstSentence = false;
+      let spokenText = ''; // Track already spoken text to find new sentences
 
-      // 3. Process the stream
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -98,23 +96,29 @@ function App() {
         const chunk = decoder.decode(value, { stream: true });
         fullReply += chunk;
 
-        // HIGH EFFICIENCY: Speak as soon as we have a full sentence or enough text
-        // This dramatically reduces perceived latency
-        if (!hasSpokenFirstSentence) {
-          const sentenceMatch = fullReply.match(/[^.!?]+[.!?]/);
-          if (sentenceMatch) {
-            speak(sentenceMatch[0].trim());
-            hasSpokenFirstSentence = true;
+        // Process new speakable sentences from the buffer
+        // match all sentences ending in punctuation
+        const newlyAdded = fullReply.substring(spokenText.length);
+        const sentenceMatch = newlyAdded.match(/[^.!?]+[.!?]/g);
+        
+        if (sentenceMatch) {
+          for (const sentence of sentenceMatch) {
+            const cleanSentence = sentence.trim();
+            if (cleanSentence) {
+              speak(cleanSentence, true); // Append to queue
+              spokenText += newlyAdded.substring(0, newlyAdded.indexOf(sentence) + sentence.length);
+            }
           }
         }
       }
 
-      // 4. If it was too short for a sentence or we missed it, speak the whole thing
-      if (!hasSpokenFirstSentence && fullReply) {
-        speak(fullReply);
+      // Final check for any dangling text without punctuation
+      const remaining = fullReply.substring(spokenText.length).trim();
+      if (remaining) {
+        speak(remaining, true);
       }
 
-      // 5. Background save AI reply
+      // 3. Background save AI reply
       addDoc(collection(db, `chats/${user.uid}/messages`), {
         role: 'assistant',
         content: fullReply,
@@ -123,7 +127,7 @@ function App() {
 
     } catch (err) {
       console.error("Conversation Error:", err);
-      speak("I encountered a connection error.");
+      speak("I encountered a connection error. Please try again.");
     } finally {
       setIsProcessing(false);
     }

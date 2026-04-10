@@ -12,7 +12,19 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  console.log("%c[Firebase Diagnostic]", "color: #00f2ff; font-weight: bold;", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    apiKeySnippet: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 5)}...` : 'MISSING'
+  });
+  
+  app = initializeApp(firebaseConfig);
+} catch (error) {
+  console.error("Firebase Initialization Error:", error);
+}
+
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 export const db = getFirestore(app);

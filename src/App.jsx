@@ -2,35 +2,36 @@ import React, { useState, useEffect } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from './firebase/config'
-import { seedLessons } from './firebase/seed' // Import seeder
 import LoginScreen from './components/LoginScreen'
 import VoiceOrb from './components/VoiceOrb'
 import ChatHistory from './components/ChatHistory'
-import LessonSelector from './components/LessonSelector' // Import Selector
+import LessonPickerModal from './components/LessonPickerModal'
+import LessonNotesPanel from './components/LessonNotesPanel'
 import useSpeechRecognition from './hooks/useSpeechRecognition'
 import useSpeechSynthesis from './hooks/useSpeechSynthesis'
+import MathRenderer from './components/MathRenderer'
+import MathChallenge from './components/MathChallenge'
 import './App.css'
 
 function App() {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [messages, setMessages] = useState([])
+  const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
   
-  // Lesson Logic State
+  // Lesson & Challenge State
   const [activeLesson, setActiveLesson] = useState(null)
-  const [currentSectionIdx, setCurrentSectionIdx] = useState(0)
+  const [currentChapterId, setCurrentChapterId] = useState(1)
+  const [activeChallenge, setActiveChallenge] = useState(null)
+  const [whiteboardBlocks, setWhiteboardBlocks] = useState([]) 
+  const [showPicker, setShowPicker] = useState(false)
+  const [lastActivity, setLastActivity] = useState(Date.now())
 
-  const { 
-    isListening, 
-    transcript, 
-    startListening, 
-    stopListening, 
-    error: recogError, 
-    setTranscript 
-  } = useSpeechRecognition((finalText) => {
-    // This callback fires exactly when a final result is ready
+  const { isListening, transcript, startListening, stopListening, error: recogError, setTranscript } = useSpeechRecognition((finalText) => {
     if (finalText.trim() !== '' && !isProcessing) {
+      setLastActivity(Date.now());
       handleUserSpeechContent(finalText);
       setTranscript('');
     }
@@ -38,212 +39,281 @@ function App() {
 
   const { isSpeaking, speak, cancel: cancelSpeak } = useSpeechSynthesis();
 
-  // Handle Authentication
+  // Silence Monitor
+  useEffect(() => {
+    if (!activeLesson || isProcessing || isSpeaking || isListening || activeChallenge) return;
+    const silenceCheck = setInterval(() => {
+      const idleTime = Date.now() - lastActivity;
+      if (idleTime > 15000) {
+        setLastActivity(Date.now());
+        handleUserSpeechContent("[USER_SILENCE]");
+      }
+    }, 5000);
+    return () => clearInterval(silenceCheck);
+  }, [activeLesson, isProcessing, isSpeaking, isListening, lastActivity, activeChallenge]);
+
+  // Auth Listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
       setAuthLoading(false)
-      // Auto-seed for development
-      if (currentUser) seedLessons()
+      if (currentUser) setShowPicker(true);
     })
     return () => unsub()
   }, [])
 
-  // Handle Fetching Messages
+  // Messages Sync - Handles both Firebase and Local fallback
   useEffect(() => {
     if (!user) return;
-    // Increased limit to 50 for better context retention
-    const q = query(
-      collection(db, `chats/${user.uid}/messages`),
-      orderBy('timestamp', 'desc'),
-      limit(50)
-    )
-    const unsub = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      // Reverse to show chronological: [oldest ... newest]
-      setMessages(msgs.reverse())
-    })
-    return () => unsub()
-  }, [user])
+
+    if (persistenceMode === 'firebase') {
+      const q = query(
+        collection(db, `chats/${user.uid}/messages`),
+        orderBy('timestamp', 'desc'),
+        limit(50)
+      )
+      const unsub = onSnapshot(q, (snapshot) => {
+        const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        setMessages(msgs.reverse())
+      }, (error) => {
+        if (error.code === 'permission-denied') {
+          console.warn("Firestore permissions denied. Switching to Local Storage fallback.");
+          setPersistenceMode('local');
+        }
+      });
+      return () => unsub()
+    } else {
+      // Local Storage Fallback
+      const localKey = `nova_chat_${user.uid}`;
+      const saved = localStorage.getItem(localKey);
+      if (saved) setMessages(JSON.parse(saved));
+    }
+  }, [user, persistenceMode])
+
+  const saveMessage = async (role, content) => {
+    if (!user) return;
+    const msgData = { role, content, timestamp: serverTimestamp() };
+
+    if (persistenceMode === 'firebase') {
+      try {
+        await addDoc(collection(db, `chats/${user.uid}/messages`), msgData);
+      } catch (err) {
+        if (err.code === 'permission-denied' || err.message.includes('permission')) {
+          setPersistenceMode('local');
+          saveToLocal(role, content);
+        }
+      }
+    } else {
+      saveToLocal(role, content);
+    }
+  };
+
+  const saveToLocal = (role, content) => {
+    const localKey = `nova_chat_${user.uid}`;
+    const msg = { role, content, timestamp: new Date().toISOString(), id: Date.now() };
+    setMessages(prev => {
+      const updated = [...prev, msg];
+      localStorage.setItem(localKey, JSON.stringify(updated.slice(-50)));
+      return updated;
+    });
+  };
+
+  const handleLessonSelect = async (lessonId) => {
+    setShowPicker(false)
+    setActiveChallenge(null)
+    setWhiteboardBlocks([])
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/lessons/${lessonId}`)
+      const data = await resp.json()
+      setActiveLesson(data)
+      setCurrentChapterId(1)
+      setLastActivity(Date.now())
+      setTimeout(() => handleUserSpeechContent("start"), 800);
+    } catch (err) {
+      console.error("Error loading lesson:", err)
+    }
+  }
+
+  const handleChallengeResult = (isCorrect, userAnswer) => {
+    setLastActivity(Date.now());
+    const signal = isCorrect 
+      ? `[CHALLENGE_RESULT: CORRECT, answer: ${userAnswer}]`
+      : `[CHALLENGE_RESULT: INCORRECT, answer: ${userAnswer}]`;
+    setTimeout(() => {
+      setActiveChallenge(null);
+      handleUserSpeechContent(signal);
+    }, 600);
+  };
 
   const handleUserSpeechContent = async (text) => {
     if (!user || !text.trim()) return;
     setIsProcessing(true);
+    setLastActivity(Date.now());
 
     try {
-      // 1. Background save user message
-      addDoc(collection(db, `chats/${user.uid}/messages`), {
-        role: 'user',
-        content: text,
-        timestamp: serverTimestamp()
-      }).catch(err => console.error("Firestore Error:", err));
+      const isInternalSignal = text.startsWith("[") || text === "start";
+      if (!isInternalSignal) await saveMessage('user', text);
 
-      // 2. Prepare context for token-efficient teaching
-      const currentSection = activeLesson?.sections[currentSectionIdx];
+      const recentHistory = messages.slice(-15).map(m => ({ role: m.role, content: m.content }));
       const lessonContext = activeLesson ? {
-        lessonTitle: activeLesson.title,
-        sectionTitle: currentSection.title,
-        sectionContent: currentSection.content,
-        isLast: currentSectionIdx === activeLesson.sections.length - 1
+        title: activeLesson.title,
+        chapters: activeLesson.chapters.map(c => ({ id: c.id, title: c.title, summary: c.summary }))
       } : null;
 
-      // 3. Fetch with streaming support
-      const apiUrl = import.meta.env.VITE_API_URL + '/chat';
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: text, 
-          history: recentHistory,
-          userName: user.displayName || 'Student',
-          lessonContext
-        })
+        body: JSON.stringify({ message: text, history: recentHistory, userName: user.displayName || 'Student', lessonContext })
       });
 
-      if (!response.ok) throw new Error('API Error');
+      if (!response.ok) {
+        if (response.status === 403) throw new Error("Backend Access Denied (403). Possible Groq API Key issue.");
+        throw new Error(`Server Error: ${response.status}`);
+      }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullReply = '';
-      let spokenText = ''; // Track already spoken text to find new sentences
+      let spokenText = '';
+      let processedWriteIdx = -1;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         const chunk = decoder.decode(value, { stream: true });
         fullReply += chunk;
 
-        // Process new speakable sentences from the buffer
-        // match all sentences ending in punctuation
+        const chapterMatch = fullReply.match(/\[\[CHAPTER:(\d+)\]\]/);
+        if (chapterMatch) {
+          const newId = parseInt(chapterMatch[1]);
+          if (newId !== currentChapterId) setCurrentChapterId(newId);
+        }
+
+        if (fullReply.includes("[[CLEAR]]")) setWhiteboardBlocks([]);
+
+        const mathMatch = fullReply.match(/\[\[MATH_QUESTION:\s*"([^"]+)",\s*"([^"]+)"\]\]/);
+        if (mathMatch && !activeChallenge) {
+          setActiveChallenge({ question: mathMatch[1], answer: mathMatch[2] });
+        }
+
+        const writeMatches = [...fullReply.matchAll(/\[\[WRITE:\s*"([^"]+)"\]\]/g)];
+        if (writeMatches.length > processedWriteIdx + 1) {
+          processedWriteIdx = writeMatches.length - 1;
+          setWhiteboardBlocks(prev => [...prev, { id: Date.now(), content: writeMatches[processedWriteIdx][1] }]);
+        }
+
         const newlyAdded = fullReply.substring(spokenText.length);
         const sentenceMatch = newlyAdded.match(/[^.!?]+[.!?]/g);
-        
         if (sentenceMatch) {
           for (const sentence of sentenceMatch) {
-            const cleanSentence = sentence.trim();
-            if (cleanSentence) {
-              speak(cleanSentence, true); // Append to queue
-              spokenText += newlyAdded.substring(0, newlyAdded.indexOf(sentence) + sentence.length);
-            }
+            const cleanSentence = sentence.replace(/\[\[.*?\]\]/g, '').trim();
+            if (cleanSentence) speak(cleanSentence, true);
+            spokenText += newlyAdded.substring(0, newlyAdded.indexOf(sentence) + sentence.length);
           }
         }
       }
 
-      // Final check for any dangling text without punctuation
-      const remaining = fullReply.substring(spokenText.length).trim();
-      if (remaining) {
-        speak(remaining, true);
-      }
+      const remaining = fullReply.substring(spokenText.length).replace(/\[\[.*?\]\]/g, '').trim();
+      if (remaining) speak(remaining, true);
 
-      // 3. Background save AI reply
-      addDoc(collection(db, `chats/${user.uid}/messages`), {
-        role: 'assistant',
-        content: fullReply,
-        timestamp: serverTimestamp()
-      }).catch(err => console.error("Firestore Error:", err));
+      setLastActivity(Date.now());
+      await saveMessage('assistant', fullReply.replace(/\[\[.*?\]\]/g, '').trim());
 
     } catch (err) {
-      console.error("Conversation Error:", err);
-      speak("I encountered a connection error. Please try again.");
+      console.error("Chat Error:", err);
+      speak(`I encountered an error: ${err.message}`);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleAskQuestion = () => {
-    cancelSpeak();
-    speak("Yeah you can ask your question but it must be on the topic plants");
-    // Trigger listening briefly after notice
-    setTimeout(() => startListening(), 2500);
-  };
-
   const handleOrbClick = () => {
-    if (isSpeaking) {
-      cancelSpeak();
-    } else if (isListening) {
-      stopListening();
-    } else {
+    setLastActivity(Date.now());
+    if (isSpeaking) cancelSpeak();
+    else if (isListening) stopListening();
+    else {
       if (isProcessing) return;
       cancelSpeak();
       startListening();
     }
   };
 
-  const handleSignOut = () => {
-    cancelSpeak();
-    signOut(auth);
-  };
-
-  if (authLoading) return <div className="loading-screen">Loading...</div>;
-
+  if (authLoading) return <div className="loading-screen">Loading Nova...</div>;
   if (!user) return <LoginScreen />;
 
   return (
     <div className="app-container">
-      {!activeLesson && <LessonSelector onSelect={(l) => setActiveLesson(l)} />}
-      
+      {showPicker && <LessonPickerModal onSelect={handleLessonSelect} onDismiss={() => setShowPicker(false)} />}
+
       <header className="app-header">
-        <h1 className="logo">Nova Science</h1>
+        <h1 className="logo" 
+            onMouseEnter={() => setShowDiagnostics(true)} 
+            onMouseLeave={() => setShowDiagnostics(false)}>
+          Nova AI
+        </h1>
+        {showDiagnostics && (
+          <div className="diagnostic-popup">
+            <p><strong>UID:</strong> {user.uid}</p>
+            <p><strong>Project:</strong> {db.app.options.projectId}</p>
+            <p><strong>Storage:</strong> {persistenceMode}</p>
+          </div>
+        )}
         <div className="user-section">
-          <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="User Avatar" className="avatar" />
-          <button className="signout-btn" onClick={handleSignOut}>Sign Out</button>
+          {persistenceMode === 'local' && <span className="local-badge" title="Firestore Permissions Denied. Using Local memory.">Local Sync</span>}
+          <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="Avatar" className="avatar" />
+          <button className="signout-btn" onClick={() => { cancelSpeak(); signOut(auth); }}>Sign Out</button>
         </div>
       </header>
 
       <main className={`main-content ${activeLesson ? 'split-view' : ''}`}>
-        {activeLesson && (
-          <aside className="lesson-panel">
-            <div className="lesson-header">
-              <span className="badge">Lesson Mode</span>
-              <h2>{activeLesson.title}</h2>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${((currentSectionIdx + 1) / activeLesson.sections.length) * 100}%` }}
-                ></div>
+        {activeLesson ? (
+          <>
+            {/* PART A: Left 75% */}
+            <section className="part-a">
+              <div className="row-c">
+                <LessonNotesPanel 
+                  lesson={activeLesson} 
+                  whiteboardBlocks={whiteboardBlocks}
+                  currentChapterId={currentChapterId}
+                  onChapterChange={setCurrentChapterId}
+                />
               </div>
-            </div>
-            
-            <div className="lesson-notes scrollbar-hide">
-              {activeLesson.sections.map((section, idx) => (
-                <div 
-                  key={section.id} 
-                  className={`section-note ${idx === currentSectionIdx ? 'active' : ''}`}
-                  onClick={() => setCurrentSectionIdx(idx)}
-                >
-                  <h4>{section.title}</h4>
-                  <p>{section.content}</p>
-                </div>
-              ))}
-            </div>
-          </aside>
-        )}
+              <div className="row-d">
+                {activeChallenge ? (
+                  <MathChallenge 
+                    question={activeChallenge.question} 
+                    correctAnswer={activeChallenge.answer}
+                    onResult={handleChallengeResult}
+                  />
+                ) : (
+                  <div className="interaction-placeholder">
+                    <div className="status-badge">Nova is Active</div>
+                    <p>Listen to Nova's instructions. When she has a question for you, it will appear here.</p>
+                  </div>
+                )}
+              </div>
+            </section>
 
-        <div className="chat-interface">
-          <div className="orb-section">
-            <VoiceOrb
-              isListening={isListening}
-              isSpeaking={isSpeaking}
-              isProcessing={isProcessing}
-              transcript={transcript}
-              onClick={handleOrbClick}
-              error={recogError}
-            />
-            {activeLesson && (
-              <div className="lesson-controls">
-                <button className="ask-btn" onClick={handleAskQuestion}>Ask Question</button>
-                <div className="nav-buttons">
-                  <button disabled={currentSectionIdx === 0} onClick={() => setCurrentSectionIdx(p => p - 1)}>Back</button>
-                  <button disabled={currentSectionIdx === activeLesson.sections.length - 1} onClick={() => setCurrentSectionIdx(p => p + 1)}>Next</button>
+            {/* PART B: Right 25% */}
+            <section className="part-b">
+              <div className="row-e">
+                <div className="orb-section">
+                  <VoiceOrb isListening={isListening} isSpeaking={isSpeaking} isProcessing={isProcessing} transcript={transcript} onClick={handleOrbClick} error={recogError} />
                 </div>
               </div>
-            )}
+              <div className="row-f">
+                <div className="chat-section">
+                  <ChatHistory messages={messages} />
+                </div>
+              </div>
+            </section>
+          </>
+        ) : (
+          <div className="welcome-placeholder">
+            <h2>Akwaaba! Select a lesson to begin.</h2>
+            <button className="primary-btn" onClick={() => setShowPicker(true)}>Open Lesson Catalog</button>
           </div>
-          <div className="chat-section">
-            <ChatHistory messages={messages} />
-          </div>
-        </div>
+        )}
       </main>
     </div>
   )

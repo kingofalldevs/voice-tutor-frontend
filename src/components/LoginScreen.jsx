@@ -17,13 +17,25 @@ export default function LoginScreen() {
 
   return (
     <div className="login-screen">
-      <div className="login-card">
-        <h1>Voice Chat</h1>
-        <p>A ChatGPT-style voice assistant</p>
-        <button className="google-btn" onClick={handleLogin}>
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
-          Sign in with Google
-        </button>
+      <div className="login-backdrop"></div>
+      <div className="login-card glass-panel">
+        <div className="login-header">
+          <div className="nova-icon"></div>
+          <h1>Nova AI</h1>
+          <p>Guided Intelligence for the Curious Mind</p>
+        </div>
+        
+        <div className="login-actions">
+          <button className="google-btn" onClick={handleLogin}>
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
+            Continue with Google
+          </button>
+          
+          <div className="login-footer">
+            <p>By continuing, you agree to enter a world of masterclass education.</p>
+          </div>
+        </div>
+        
         {error && <p className="error-text">{error}</p>}
       </div>
     </div>

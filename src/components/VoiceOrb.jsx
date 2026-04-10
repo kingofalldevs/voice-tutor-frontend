@@ -33,13 +33,9 @@ export default function VoiceOrb({ isListening, isSpeaking, isProcessing, onClic
         aria-label="Voice control"
         disabled={isProcessing}
       >
-        <div className="orb-content">
+        <div className="orb-visual">
           <Icon size={48} className={`orb-icon ${isProcessing ? 'spin' : ''}`} />
         </div>
-        {/* Decorative rings for animation */}
-        <div className="ring ring-1"></div>
-        <div className="ring ring-2"></div>
-        <div className="ring ring-3"></div>
       </button>
       <div className="text-feedback">
         <p className="status-text">{statusText}</p>

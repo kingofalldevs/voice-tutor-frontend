@@ -19,9 +19,22 @@
   z-index: 100;
 }
 
+.app-header .logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: help;
+}
+
+.app-header .logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 .logo {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 900;
   margin: 0;
   color: var(--primary-accent);

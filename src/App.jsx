@@ -203,11 +203,12 @@ function App() {
       {showPicker && <LessonPickerModal onSelect={handleLessonSelect} onDismiss={() => setShowPicker(false)} />}
 
       <header className="app-header">
-        <h1 className="logo"
+        <div className="logo-section"
           onMouseEnter={() => setShowDiagnostics(true)}
           onMouseLeave={() => setShowDiagnostics(false)}>
-          Nova AI
-        </h1>
+          <img src="/logo.png" alt="Nova Logo" className="logo-img" />
+          <h1 className="logo">Nova AI</h1>
+        </div>
         {showDiagnostics && (
           <div className="diagnostic-popup">
             <p><strong>UID:</strong> {user.uid}</p>

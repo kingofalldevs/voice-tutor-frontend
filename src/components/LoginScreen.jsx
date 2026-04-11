@@ -26,7 +26,7 @@ export default function LoginScreen({ onBack }) {
 
       <div className="login-card glass-panel">
         <div className="login-header">
-          <div className="nova-icon"></div>
+          <img src="/logo.png" alt="Nova Logo" className="login-logo-img" />
           <h1>Nova AI</h1>
           <p>Guided Intelligence for the Curious Mind</p>
         </div>

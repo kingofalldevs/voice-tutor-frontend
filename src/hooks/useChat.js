@@ -83,13 +83,20 @@ export default function useChat({
         }
 
         // 4. Whiteboard Writing (Resilient Parsing)
-        // We match all completed [[WRITE: "..."]] commands
-        const writeRegex = /\[\[WRITE:\s*"([\s\S]*?)"\]\]/g;
+        // Match [[WRITE: content]] with or without quotes
+        const writeRegex = /\[\[WRITE:\s*([\s\S]*?)\]\]/g;
         const matches = [...fullReply.matchAll(writeRegex)];
         
         if (matches.length > lastMatchCount) {
           for (let i = lastMatchCount; i < matches.length; i++) {
-            const content = matches[i][1];
+            let content = matches[i][1].trim();
+            // Remove optional surrounding quotes
+            if (content.startsWith('"') && content.endsWith('"')) {
+              content = content.slice(1, -1);
+            } else if (content.startsWith("'") && content.endsWith("'")) {
+              content = content.slice(1, -1);
+            }
+
             setWhiteboardBlocks(prev => {
               // Avoid duplicate adds if the state update is delayed
               const blockId = `block_${Date.now()}_${i}`;
@@ -104,17 +111,31 @@ export default function useChat({
         const sentences = newlyAdded.match(/[^.!?]+[.!?]/g);
         if (sentences) {
           for (const s of sentences) {
-            // Clean out commands for speech
-            const clean = s.replace(/\[\[.*?\]\]/g, '').trim();
-            if (clean) speak(clean, true);
+            // Advanced Cleaning for TTS
+            const clean = s
+              .replace(/\[\[.*?\]\]/g, '')       // Remove [[COMMANDS]]
+              .replace(/[#*_`$]/g, '')           // Remove #, *, _, `, $ (Markdown/Math markers)
+              .replace(/\\n/g, ' ')              // Replace newlines with spaces
+              .replace(/\s+/g, ' ')              // Collapse multiple spaces
+              .trim();
+
+            if (clean && clean.length > 1) {
+              speak(clean, true);
+            }
             spokenText += newlyAdded.substring(newlyAdded.indexOf(s), newlyAdded.indexOf(s) + s.length);
           }
         }
       }
 
       // Final Speak
-      const remaining = fullReply.substring(spokenText.length).replace(/\[\[.*?\]\]/g, '').trim();
-      if (remaining) speak(remaining, true);
+      const finalRemaining = fullReply.substring(spokenText.length)
+        .replace(/\[\[.*?\]\]/g, '')
+        .replace(/[#*_`$]/g, '')
+        .trim();
+        
+      if (finalRemaining && finalRemaining.length > 1) {
+        speak(finalRemaining, true);
+      }
 
       setLastActivity(Date.now());
       await saveMessage('assistant', fullReply.replace(/\[\[.*?\]\]/g, '').trim());

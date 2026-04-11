@@ -21,12 +21,12 @@ function App() {
   const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
   const [isProcessingLocal, setIsProcessingLocal] = useState(false)
   const [showDiagnostics, setShowDiagnostics] = useState(false)
-  
+
   // Lesson & Challenge State
   const [activeLesson, setActiveLesson] = useState(null)
   const [currentChapterId, setCurrentChapterId] = useState(1)
   const [activeChallenge, setActiveChallenge] = useState(null)
-  const [whiteboardBlocks, setWhiteboardBlocks] = useState([]) 
+  const [whiteboardBlocks, setWhiteboardBlocks] = useState([])
   const [showPicker, setShowPicker] = useState(false)
   const [lastActivity, setLastActivity] = useState(Date.now())
 
@@ -156,7 +156,7 @@ function App() {
 
   const handleChallengeResult = (isCorrect, userAnswer) => {
     setLastActivity(Date.now());
-    const signal = isCorrect 
+    const signal = isCorrect
       ? `[CHALLENGE_RESULT: CORRECT, answer: ${userAnswer}]`
       : `[CHALLENGE_RESULT: INCORRECT, answer: ${userAnswer}]`;
     setTimeout(() => {
@@ -184,9 +184,9 @@ function App() {
       {showPicker && <LessonPickerModal onSelect={handleLessonSelect} onDismiss={() => setShowPicker(false)} />}
 
       <header className="app-header">
-        <h1 className="logo" 
-            onMouseEnter={() => setShowDiagnostics(true)} 
-            onMouseLeave={() => setShowDiagnostics(false)}>
+        <h1 className="logo"
+          onMouseEnter={() => setShowDiagnostics(true)}
+          onMouseLeave={() => setShowDiagnostics(false)}>
           Nova AI
         </h1>
         {showDiagnostics && (
@@ -207,29 +207,24 @@ function App() {
         {activeLesson ? (
           <>
             {/* PART A: Left 75% */}
-            <section className="part-a">
+            <section className={`part-a ${activeChallenge ? 'has-challenge' : 'no-challenge'}`}>
               <div className="row-c">
-                <LessonNotesPanel 
-                  lesson={activeLesson} 
+                <LessonNotesPanel
+                  lesson={activeLesson}
                   whiteboardBlocks={whiteboardBlocks}
                   currentChapterId={currentChapterId}
                   onChapterChange={setCurrentChapterId}
                 />
               </div>
-              <div className="row-d">
-                {activeChallenge ? (
-                  <MathChallenge 
-                    question={activeChallenge.question} 
+              {activeChallenge && (
+                <div className="row-d">
+                  <MathChallenge
+                    question={activeChallenge.question}
                     correctAnswer={activeChallenge.answer}
                     onResult={handleChallengeResult}
                   />
-                ) : (
-                  <div className="interaction-placeholder">
-                    <div className="status-badge">Nova is Active</div>
-                    <p>Listen to Nova's instructions. When she has a question for you, it will appear here.</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </section>
 
             {/* PART B: Right 25% */}

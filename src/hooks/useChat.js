@@ -117,7 +117,7 @@ export default function useChat({
             // Advanced Cleaning for TTS
             const clean = s
               .replace(/\[\[[\s\S]*?\]\]/g, '')  // Remove multiline [[COMMANDS]]
-              .replace(/[#*_`$]/g, '')           // Remove #, *, _, `, $ (Markdown/Math markers)
+              .replace(/[\\\[\]$#*_`{}|<>]/g, '') // Aggressively remove technical symbols
               .replace(/\\n/g, ' ')              // Replace newlines with spaces
               .replace(/\s+/g, ' ')              // Collapse multiple spaces
               .trim();
@@ -133,7 +133,7 @@ export default function useChat({
       // Final Speak
       const finalRemaining = fullReply.substring(spokenText.length)
         .replace(/\[\[[\s\S]*?\]\]/g, '')
-        .replace(/[#*_`$]/g, '')
+        .replace(/[\\\[\]$#*_`{}|<>]/g, '')
         .trim();
         
       if (finalRemaining && finalRemaining.length > 1) {

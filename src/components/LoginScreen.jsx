@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../firebase/config';
+import { ArrowLeft } from 'lucide-react';
 import './LoginScreen.css';
 
-export default function LoginScreen() {
+export default function LoginScreen({ onBack }) {
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
@@ -18,6 +19,11 @@ export default function LoginScreen() {
   return (
     <div className="login-screen">
       <div className="login-backdrop"></div>
+      
+      <button className="back-btn" onClick={onBack}>
+         <ArrowLeft size={20} /> Back to Home
+      </button>
+
       <div className="login-card glass-panel">
         <div className="login-header">
           <div className="nova-icon"></div>

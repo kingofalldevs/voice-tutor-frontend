@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from './firebase/config'
+import LandingPage from './components/LandingPage'
 import LoginScreen from './components/LoginScreen'
 import VoiceOrb from './components/VoiceOrb'
 import ChatHistory from './components/ChatHistory'
@@ -21,6 +22,7 @@ function App() {
   const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
   const [isProcessingLocal, setIsProcessingLocal] = useState(false)
   const [showDiagnostics, setShowDiagnostics] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
   // Lesson & Challenge State
   const [activeLesson, setActiveLesson] = useState(null)
@@ -190,7 +192,11 @@ function App() {
   };
 
   if (authLoading) return <div className="loading-screen">Loading Nova...</div>;
-  if (!user) return <LoginScreen />;
+  
+  if (!user) {
+    if (showLogin) return <LoginScreen onBack={() => setShowLogin(false)} />;
+    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
+  }
 
   return (
     <div className="app-container">

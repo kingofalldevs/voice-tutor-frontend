@@ -6,6 +6,11 @@ export default function useSpeechRecognition(onFinalResult) {
   const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
 
+  const onFinalResultRef = useRef(onFinalResult);
+  useEffect(() => {
+    onFinalResultRef.current = onFinalResult;
+  }, [onFinalResult]);
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -36,8 +41,8 @@ export default function useSpeechRecognition(onFinalResult) {
 
       setTranscript(currentResult);
 
-      if (isFinal && onFinalResult) {
-        onFinalResult(currentResult);
+      if (isFinal && onFinalResultRef.current) {
+        onFinalResultRef.current(currentResult);
       }
     };
 
@@ -52,7 +57,7 @@ export default function useSpeechRecognition(onFinalResult) {
     recognitionRef.current.onend = () => {
       setIsListening(false);
     };
-    
+
     return () => {
       if (recognitionRef.current) {
         try {
@@ -62,7 +67,7 @@ export default function useSpeechRecognition(onFinalResult) {
         }
       }
     };
-  }, [onFinalResult]);
+  }, []);
 
   const startListening = useCallback(() => {
     setTranscript('');
@@ -81,7 +86,7 @@ export default function useSpeechRecognition(onFinalResult) {
       try {
         recognitionRef.current.stop();
       } catch (e) {
-         console.error('Could not stop listening', e);
+        console.error('Could not stop listening', e);
       }
     }
   }, [isListening]);

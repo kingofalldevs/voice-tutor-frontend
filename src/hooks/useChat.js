@@ -29,7 +29,9 @@ export default function useChat({
       const isInternalSignal = text.startsWith("[") || text === "start";
       if (!isInternalSignal) await saveMessage('user', text);
 
-      const recentHistory = messages.slice(-15).map(m => ({ role: m.role, content: m.content }));
+      // Never send stale history when starting a new lesson
+      const isStartSignal = text === 'start' || text.toLowerCase().startsWith('[user_silence]');
+      const recentHistory = isStartSignal ? [] : messages.slice(-15).map(m => ({ role: m.role, content: m.content }));
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
@@ -40,7 +42,8 @@ export default function useChat({
           userName: user.displayName || 'Student', 
           lessonContext: activeLesson ? {
             title: activeLesson.title,
-            chapters: activeLesson.chapters.map(c => ({ id: c.id, title: c.title, summary: c.summary }))
+            chapters: activeLesson.chapters.map(c => ({ id: c.id, title: c.title, summary: c.summary })),
+            currentChapterId: currentChapterId
           } : null
         })
       });

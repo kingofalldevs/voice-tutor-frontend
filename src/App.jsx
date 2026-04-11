@@ -29,6 +29,7 @@ function App() {
   const [whiteboardBlocks, setWhiteboardBlocks] = useState([])
   const [showPicker, setShowPicker] = useState(false)
   const [lastActivity, setLastActivity] = useState(Date.now())
+  const [pendingLessonStart, setPendingLessonStart] = useState(false)
 
   const { isListening, transcript, startListening, stopListening, error: recogError, setTranscript } = useSpeechRecognition((finalText) => {
     if (finalText.trim() !== '' && !isProcessing) {
@@ -79,10 +80,10 @@ function App() {
 
   // Messages Sync - Handles both Firebase and Local fallback (Isolated by Lesson)
   useEffect(() => {
-    if (!user || !activeLesson) {
-      setMessages([]);
-      return;
-    }
+    // Always clear immediately when lesson changes to prevent stale data flash
+    setMessages([]);
+    
+    if (!user || !activeLesson) return;
 
     if (persistenceMode === 'firebase') {
       const q = query(
@@ -140,19 +141,31 @@ function App() {
   const handleLessonSelect = async (lessonId) => {
     setShowPicker(false)
     setActiveChallenge(null)
-    setWhiteboardBlocks([])
-    setMessages([]) // Immediate local cleanup
+    setWhiteboardBlocks([])  // Clear whiteboard
+    setMessages([])          // Immediately wipe messages before anything loads
+    setActiveLesson(null)    // Reset lesson to trigger clean effect execution
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL}/lessons/${lessonId}`)
       const data = await resp.json()
-      setActiveLesson(data)
       setCurrentChapterId(1)
       setLastActivity(Date.now())
-      setTimeout(() => sendMessage("start"), 800);
+      setActiveLesson(data)  // Set new lesson AFTER clearing state
+      setPendingLessonStart(true) // Trigger effect to send start message
     } catch (err) {
       console.error("Error loading lesson:", err)
     }
   }
+
+  // Handle Lesson Start Signal cleanly (avoids stale closures from handleLessonSelect)
+  useEffect(() => {
+    if (pendingLessonStart && activeLesson) {
+      const timer = setTimeout(() => {
+        sendMessage("start");
+        setPendingLessonStart(false);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [pendingLessonStart, activeLesson, sendMessage])
 
   const handleChallengeResult = (isCorrect, userAnswer) => {
     setLastActivity(Date.now());

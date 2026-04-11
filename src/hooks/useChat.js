@@ -116,7 +116,7 @@ export default function useChat({
           for (const s of sentences) {
             // Advanced Cleaning for TTS
             const clean = s
-              .replace(/\[\[.*?\]\]/g, '')       // Remove [[COMMANDS]]
+              .replace(/\[\[[\s\S]*?\]\]/g, '')  // Remove multiline [[COMMANDS]]
               .replace(/[#*_`$]/g, '')           // Remove #, *, _, `, $ (Markdown/Math markers)
               .replace(/\\n/g, ' ')              // Replace newlines with spaces
               .replace(/\s+/g, ' ')              // Collapse multiple spaces
@@ -132,7 +132,7 @@ export default function useChat({
 
       // Final Speak
       const finalRemaining = fullReply.substring(spokenText.length)
-        .replace(/\[\[.*?\]\]/g, '')
+        .replace(/\[\[[\s\S]*?\]\]/g, '')
         .replace(/[#*_`$]/g, '')
         .trim();
         
@@ -141,7 +141,7 @@ export default function useChat({
       }
 
       setLastActivity(Date.now());
-      await saveMessage('assistant', fullReply.replace(/\[\[.*?\]\]/g, '').trim());
+      await saveMessage('assistant', fullReply.replace(/\[\[[\s\S]*?\]\]/g, '').trim());
 
     } catch (err) {
       console.error("Chat Error:", err);

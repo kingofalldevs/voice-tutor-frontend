@@ -36,12 +36,16 @@ export default function MathRenderer({ math, content, block: forceBlock = false 
       {parts.map((part, index) => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
           const expression = part.slice(2, -2);
-          return <BlockMath key={index} math={expression || " "} />;
+          return (
+            <div key={index} className="math-block-wrapper entry-animate">
+              <BlockMath math={expression || " "} />
+            </div>
+          );
         } else if (part.startsWith('$') && part.endsWith('$')) {
           const expression = part.slice(1, -1);
           return <InlineMath key={index} math={expression || " "} />;
         } else {
-          return <span key={index}>{renderText(part)}</span>;
+          return <React.Fragment key={index}>{renderText(part)}</React.Fragment>;
         }
       })}
     </div>

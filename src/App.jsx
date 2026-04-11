@@ -9,6 +9,7 @@ import LessonPickerModal from './components/LessonPickerModal'
 import LessonNotesPanel from './components/LessonNotesPanel'
 import useSpeechRecognition from './hooks/useSpeechRecognition'
 import useSpeechSynthesis from './hooks/useSpeechSynthesis'
+import useChat from './hooks/useChat'
 import MathRenderer from './components/MathRenderer'
 import MathChallenge from './components/MathChallenge'
 import './App.css'
@@ -18,7 +19,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [messages, setMessages] = useState([])
   const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessingLocal, setIsProcessingLocal] = useState(false)
   const [showDiagnostics, setShowDiagnostics] = useState(false)
   
   // Lesson & Challenge State
@@ -32,12 +33,26 @@ function App() {
   const { isListening, transcript, startListening, stopListening, error: recogError, setTranscript } = useSpeechRecognition((finalText) => {
     if (finalText.trim() !== '' && !isProcessing) {
       setLastActivity(Date.now());
-      handleUserSpeechContent(finalText);
+      sendMessage(finalText);
       setTranscript('');
     }
   });
 
   const { isSpeaking, speak, cancel: cancelSpeak } = useSpeechSynthesis();
+
+  // Chat Logic Hook
+  const { isProcessing, sendMessage } = useChat({
+    user,
+    messages,
+    saveMessage: (role, content) => saveMessage(role, content),
+    activeLesson,
+    currentChapterId,
+    setCurrentChapterId,
+    setWhiteboardBlocks,
+    setActiveChallenge,
+    setLastActivity,
+    speak
+  });
 
   // Silence Monitor
   useEffect(() => {
@@ -62,13 +77,16 @@ function App() {
     return () => unsub()
   }, [])
 
-  // Messages Sync - Handles both Firebase and Local fallback
+  // Messages Sync - Handles both Firebase and Local fallback (Isolated by Lesson)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !activeLesson) {
+      setMessages([]);
+      return;
+    }
 
     if (persistenceMode === 'firebase') {
       const q = query(
-        collection(db, `chats/${user.uid}/messages`),
+        collection(db, `chats/${user.uid}/lessons/${activeLesson.id}/messages`),
         orderBy('timestamp', 'desc'),
         limit(50)
       )
@@ -84,19 +102,19 @@ function App() {
       return () => unsub()
     } else {
       // Local Storage Fallback
-      const localKey = `nova_chat_${user.uid}`;
+      const localKey = `nova_chat_${user.uid}_${activeLesson.id}`;
       const saved = localStorage.getItem(localKey);
-      if (saved) setMessages(JSON.parse(saved));
+      setMessages(saved ? JSON.parse(saved) : []);
     }
-  }, [user, persistenceMode])
+  }, [user, activeLesson, persistenceMode])
 
   const saveMessage = async (role, content) => {
-    if (!user) return;
+    if (!user || !activeLesson) return;
     const msgData = { role, content, timestamp: serverTimestamp() };
 
     if (persistenceMode === 'firebase') {
       try {
-        await addDoc(collection(db, `chats/${user.uid}/messages`), msgData);
+        await addDoc(collection(db, `chats/${user.uid}/lessons/${activeLesson.id}/messages`), msgData);
       } catch (err) {
         if (err.code === 'permission-denied' || err.message.includes('permission')) {
           setPersistenceMode('local');
@@ -109,7 +127,8 @@ function App() {
   };
 
   const saveToLocal = (role, content) => {
-    const localKey = `nova_chat_${user.uid}`;
+    if (!activeLesson) return;
+    const localKey = `nova_chat_${user.uid}_${activeLesson.id}`;
     const msg = { role, content, timestamp: new Date().toISOString(), id: Date.now() };
     setMessages(prev => {
       const updated = [...prev, msg];
@@ -122,13 +141,14 @@ function App() {
     setShowPicker(false)
     setActiveChallenge(null)
     setWhiteboardBlocks([])
+    setMessages([]) // Immediate local cleanup
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL}/lessons/${lessonId}`)
       const data = await resp.json()
       setActiveLesson(data)
       setCurrentChapterId(1)
       setLastActivity(Date.now())
-      setTimeout(() => handleUserSpeechContent("start"), 800);
+      setTimeout(() => sendMessage("start"), 800);
     } catch (err) {
       console.error("Error loading lesson:", err)
     }
@@ -141,90 +161,8 @@ function App() {
       : `[CHALLENGE_RESULT: INCORRECT, answer: ${userAnswer}]`;
     setTimeout(() => {
       setActiveChallenge(null);
-      handleUserSpeechContent(signal);
+      sendMessage(signal);
     }, 600);
-  };
-
-  const handleUserSpeechContent = async (text) => {
-    if (!user || !text.trim()) return;
-    setIsProcessing(true);
-    setLastActivity(Date.now());
-
-    try {
-      const isInternalSignal = text.startsWith("[") || text === "start";
-      if (!isInternalSignal) await saveMessage('user', text);
-
-      const recentHistory = messages.slice(-15).map(m => ({ role: m.role, content: m.content }));
-      const lessonContext = activeLesson ? {
-        title: activeLesson.title,
-        chapters: activeLesson.chapters.map(c => ({ id: c.id, title: c.title, summary: c.summary }))
-      } : null;
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: recentHistory, userName: user.displayName || 'Student', lessonContext })
-      });
-
-      if (!response.ok) {
-        if (response.status === 403) throw new Error("Backend Access Denied (403). Possible Groq API Key issue.");
-        throw new Error(`Server Error: ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullReply = '';
-      let spokenText = '';
-      let processedWriteIdx = -1;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        fullReply += chunk;
-
-        const chapterMatch = fullReply.match(/\[\[CHAPTER:(\d+)\]\]/);
-        if (chapterMatch) {
-          const newId = parseInt(chapterMatch[1]);
-          if (newId !== currentChapterId) setCurrentChapterId(newId);
-        }
-
-        if (fullReply.includes("[[CLEAR]]")) setWhiteboardBlocks([]);
-
-        const mathMatch = fullReply.match(/\[\[MATH_QUESTION:\s*"([^"]+)",\s*"([^"]+)"\]\]/);
-        if (mathMatch && !activeChallenge) {
-          setActiveChallenge({ question: mathMatch[1], answer: mathMatch[2] });
-        }
-
-        const writeMatches = [...fullReply.matchAll(/\[\[WRITE:\s*"([^"]+)"\]\]/g)];
-        if (writeMatches.length > processedWriteIdx + 1) {
-          processedWriteIdx = writeMatches.length - 1;
-          setWhiteboardBlocks(prev => [...prev, { id: Date.now(), content: writeMatches[processedWriteIdx][1] }]);
-        }
-
-        const newlyAdded = fullReply.substring(spokenText.length);
-        const sentenceMatch = newlyAdded.match(/[^.!?]+[.!?]/g);
-        if (sentenceMatch) {
-          for (const sentence of sentenceMatch) {
-            const cleanSentence = sentence.replace(/\[\[.*?\]\]/g, '').trim();
-            if (cleanSentence) speak(cleanSentence, true);
-            spokenText += newlyAdded.substring(0, newlyAdded.indexOf(sentence) + sentence.length);
-          }
-        }
-      }
-
-      const remaining = fullReply.substring(spokenText.length).replace(/\[\[.*?\]\]/g, '').trim();
-      if (remaining) speak(remaining, true);
-
-      setLastActivity(Date.now());
-      await saveMessage('assistant', fullReply.replace(/\[\[.*?\]\]/g, '').trim());
-
-    } catch (err) {
-      console.error("Chat Error:", err);
-      speak(`I encountered an error: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
   const handleOrbClick = () => {

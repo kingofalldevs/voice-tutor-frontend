@@ -6,24 +6,25 @@
   background: var(--bg-deep);
   overflow: hidden;
   position: relative;
+  color: var(--text-main);
 }
 
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 3.5rem;
+  padding: 1rem 3rem;
   background: var(--bg-surface);
-  border-bottom: 2px solid #000;
+  border-bottom: 2px solid var(--primary-accent);
   z-index: 100;
 }
 
 .logo {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 900;
   margin: 0;
-  color: #000;
+  color: var(--primary-accent);
   letter-spacing: -0.04em;
   text-transform: uppercase;
 }
@@ -31,7 +32,7 @@
 .user-section {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .avatar {
@@ -39,25 +40,25 @@
   height: 32px;
   border-radius: 4px;
   object-fit: cover;
-  border: 1px solid #000;
+  border: 1px solid var(--primary-accent);
 }
 
 .signout-btn {
   background: transparent;
-  color: var(--secondary-accent);
-  border: 1px solid #ddd;
-  padding: 0.4rem 1.2rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+  color: var(--text-dim);
+  border: 1px solid var(--glass-border);
+  padding: 0.4rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 800;
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+  transition: all 0.2s;
 }
 
 .signout-btn:hover {
-  background: #000;
+  background: var(--primary-accent);
   color: #fff;
-  border-color: #000;
 }
 
 .main-content {
@@ -65,10 +66,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: calc(100vh - 84px); /* Subtract header height */
 }
 
-/* Master Grid Structure */
 .main-content.split-view {
   display: grid;
   grid-template-columns: 75% 25%;
@@ -78,21 +77,21 @@
 /* Part A: Left (75%) */
 .part-a {
   display: grid;
-  grid-template-rows: 66.6% 33.4%;
-  border-right: 2px solid #000;
+  grid-template-rows: 66% 34%;
+  border-right: 2px solid var(--primary-accent);
   height: 100%;
   overflow: hidden;
 }
 
 .row-c {
   overflow: hidden;
-  border-bottom: 2px solid #000;
   background: #fff;
+  border-bottom: 2px solid var(--primary-accent);
 }
 
 .row-d {
-  background: #f9f9f9;
-  padding: 1rem;
+  background: #fafafa;
+  padding: 1.5rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -107,12 +106,12 @@
 }
 
 .row-e {
-  border-bottom: 2px solid #000;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-bottom: 2px solid var(--primary-accent);
 }
 
 .row-f {
@@ -120,11 +119,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-/* Section Overrides */
-.ui-workspace {
-  display: contents; /* Grid cells handle layout now */
 }
 
 .orb-section {
@@ -135,46 +129,29 @@
   align-items: center;
 }
 
-.chat-section {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  border: none;
-  background: transparent;
-  position: static; /* Remove absolute */
-}
-
 .loading-screen {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  gap: 1.5rem;
   background: #fff;
-  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.2em;
 }
 
 .diagnostic-popup {
   position: absolute;
   top: 5rem;
-  left: 3.5rem;
+  left: 3rem;
   background: #000;
   color: #fff;
-  padding: 1.5rem;
-  border: 4px solid #fff;
-  box-shadow: 10px 10px 0px #000;
+  padding: 1rem;
+  border-radius: 4px;
   z-index: 1000;
   font-family: monospace;
   font-size: 0.75rem;
-  pointer-events: none;
-}
-
-.diagnostic-popup p {
-  margin: 0.25rem 0;
 }
 
 .local-badge {
@@ -183,16 +160,8 @@
   font-size: 0.6rem;
   font-weight: 800;
   padding: 0.2rem 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  border-radius: 2px;
   margin-right: 1rem;
-  border: 1px solid #fff;
-  animation: blink 2s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
 }
 
 .interaction-placeholder {
@@ -202,14 +171,14 @@
   justify-content: center;
   height: 100%;
   text-align: center;
-  color: #666;
+  color: var(--text-dim);
   padding: 2rem;
 }
 
 .status-badge {
-  background: #000;
+  background: var(--primary-accent);
   color: #fff;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.8rem;
   font-size: 0.6rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -224,53 +193,32 @@
   justify-content: center;
   height: 100%;
   gap: 2rem;
-  text-align: center;
+  background: #fff;
 }
 
 .welcome-placeholder h2 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.05em;
-  color: #000;
+  letter-spacing: -0.04em;
+  color: var(--primary-accent);
 }
 
 .primary-btn {
-  background: #000;
+  background: var(--primary-accent);
   color: #fff;
   border: none;
-  padding: 1rem 3rem;
+  padding: 1rem 2.5rem;
+  border-radius: 8px;
   font-weight: 800;
+  font-family: 'Outfit', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;
-  box-shadow: 10px 10px 0px #eee;
+  box-shadow: 4px 4px 0px #eee;
+  transition: all 0.2s;
 }
 
 .primary-btn:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 12px 12px 0px #ddd;
-}
-
-@media (max-width: 1200px) {
-  .main-content.split-view {
-    grid-template-columns: 65% 35%;
-  }
-}
-
-@media (max-width: 1024px) {
-  .main-content.split-view {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    overflow-y: auto;
-  }
-  
-  .ui-workspace {
-    height: 600px;
-    border-left: none;
-    border-top: 1px solid #eee;
-  }
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+  box-shadow: 6px 6px 0px #ddd;
 }

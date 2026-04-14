@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Monitor, Mic, PlayCircle, UserPlus, Globe } from 'lucide-react';
+import { Brain, Monitor, Mic, PlayCircle, UserPlus, Globe, Menu } from 'lucide-react';
 import './LandingPage.css';
 
 export default function LandingPage({ onLoginClick, onPricingClick }) {
@@ -18,6 +18,9 @@ export default function LandingPage({ onLoginClick, onPricingClick }) {
           </div>
           <div className="nav-actions">
             <button className="nav-login-btn" onClick={onLoginClick}>Sign In</button>
+            <div className="mobile-menu-btn">
+              <Menu size={24} />
+            </div>
           </div>
         </div>
       </nav>

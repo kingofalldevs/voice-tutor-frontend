@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Brain, Monitor, Mic, PlayCircle, UserPlus, Globe, Menu } from 'lucide-react';
 import './LandingPage.css';
 
 export default function LandingPage({ onLoginClick, onPricingClick }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="landing-container">
       <nav className="landing-nav">
@@ -18,11 +20,21 @@ export default function LandingPage({ onLoginClick, onPricingClick }) {
           </div>
           <div className="nav-actions">
             <button className="nav-login-btn" onClick={onLoginClick}>Sign In</button>
-            <div className="mobile-menu-btn">
+            <div className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               <Menu size={24} />
             </div>
           </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="mobile-dropdown-menu">
+            <span className="mobile-nav-link" onClick={() => { setIsMobileMenuOpen(false); window.scrollTo({ top: document.getElementById('features').offsetTop - 120, behavior: 'smooth' }); }}>Features</span>
+            <span className="mobile-nav-link" onClick={() => { setIsMobileMenuOpen(false); onPricingClick(); }}>Pricing</span>
+            <span className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>About</span>
+            <button className="mobile-nav-login-btn" onClick={() => { setIsMobileMenuOpen(false); onLoginClick(); }}>Sign In</button>
+          </div>
+        )}
       </nav>
 
       <main className="landing-main">

@@ -1,18 +1,22 @@
 .math-challenge-container {
   background: #fff;
   border: 4px solid #000;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 12px 12px 0px #000;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
   overflow: hidden;
   height: 100%;
   color: #000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .math-challenge-container.correct {
   border-color: #000;
-  background: #f0fff4; /* Very subtle hint of success if needed, or stick to pure white */
+  background: #f0fff4;
 }
 
 .challenge-label {
@@ -21,14 +25,14 @@
   color: #000;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   border-bottom: 1px solid #000;
   display: inline-block;
 }
 
 .math-display {
   font-size: 1.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   color: #000;
   text-align: center;
   font-weight: 800;
@@ -93,4 +97,39 @@
 .feedback-text.incorrect {
   color: #000;
   text-decoration: line-through;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .math-challenge-container {
+    padding: 1rem;
+    border-width: 2px;
+    box-shadow: 4px 4px 0px #888;
+  }
+
+  .math-display {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .challenge-form {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .math-input {
+    font-size: 1.25rem;
+    padding: 0.75rem 1rem;
+    width: 100%;
+  }
+
+  .submit-answer-btn {
+    padding: 0.9rem;
+    width: 100%;
+    font-size: 0.85rem;
+  }
+
+  .feedback-text {
+    font-size: 1rem;
+  }
 }

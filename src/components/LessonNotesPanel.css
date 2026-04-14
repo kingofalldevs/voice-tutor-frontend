@@ -7,7 +7,7 @@
 }
 
 .panel-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .header-top {
@@ -63,6 +63,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .whiteboard-section {
@@ -83,6 +84,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .whiteboard-header span {
@@ -113,6 +115,8 @@
   flex-direction: column;
   gap: 1.5rem;
   background: #fff;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .whiteboard-canvas::-webkit-scrollbar {
@@ -174,6 +178,7 @@
   color: #999;
   font-style: italic;
   font-size: 1.1rem;
+  padding: 2rem;
 }
 
 .katex {
@@ -186,4 +191,53 @@
   border: 1px solid #eee;
   border-radius: 4px;
   margin: 1rem 0;
+  overflow-x: auto;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .lesson-notes-sidebar {
+    padding: 0.75rem;
+  }
+
+  .panel-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .panel-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .whiteboard-section {
+    border-width: 2px;
+    box-shadow: 4px 4px 0px #eee;
+  }
+
+  .whiteboard-header {
+    padding: 0.6rem 1rem;
+  }
+
+  .whiteboard-canvas {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .board-entry {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-left-width: 4px;
+  }
+
+  .board-h2 {
+    font-size: 1.3rem;
+  }
+
+  .board-h3 {
+    font-size: 1.1rem;
+  }
+
+  .math-block-wrapper {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
 }

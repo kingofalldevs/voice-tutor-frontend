@@ -3,6 +3,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from './firebase/config'
 import LandingPage from './components/LandingPage'
+import PricingPage from './components/PricingPage'
 import LoginScreen from './components/LoginScreen'
 import VoiceOrb from './components/VoiceOrb'
 import ChatHistory from './components/ChatHistory'
@@ -13,6 +14,7 @@ import useSpeechSynthesis from './hooks/useSpeechSynthesis'
 import useChat from './hooks/useChat'
 import MathRenderer from './components/MathRenderer'
 import MathChallenge from './components/MathChallenge'
+import { BookOpen, Mic, Square, Volume2, MessageSquare } from 'lucide-react'
 import './App.css'
 
 function App() {
@@ -22,7 +24,7 @@ function App() {
   const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
   const [isProcessingLocal, setIsProcessingLocal] = useState(false)
   const [showDiagnostics, setShowDiagnostics] = useState(false)
-  const [showLogin, setShowLogin] = useState(false)
+  const [currentView, setCurrentView] = useState('landing') // 'landing' | 'pricing' | 'login'
 
   // Lesson & Challenge State
   const [activeLesson, setActiveLesson] = useState(null)
@@ -32,6 +34,7 @@ function App() {
   const [showPicker, setShowPicker] = useState(false)
   const [lastActivity, setLastActivity] = useState(Date.now())
   const [pendingLessonStart, setPendingLessonStart] = useState(false)
+  const [activeTab, setActiveTab] = useState('board') // 'board' | 'voice'
 
   const { isListening, transcript, startListening, stopListening, error: recogError, setTranscript } = useSpeechRecognition((finalText) => {
     if (finalText.trim() !== '' && !isProcessing) {
@@ -84,7 +87,7 @@ function App() {
   useEffect(() => {
     // Always clear immediately when lesson changes to prevent stale data flash
     setMessages([]);
-    
+
     if (!user || !activeLesson) return;
 
     if (persistenceMode === 'firebase') {
@@ -146,6 +149,7 @@ function App() {
     setWhiteboardBlocks([])  // Clear whiteboard
     setMessages([])          // Immediately wipe messages before anything loads
     setActiveLesson(null)    // Reset lesson to trigger clean effect execution
+    setActiveTab('board')    // Always start on board tab
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL}/lessons/${lessonId}`)
       const data = await resp.json()
@@ -192,10 +196,11 @@ function App() {
   };
 
   if (authLoading) return <div className="loading-screen">Loading Nova...</div>;
-  
+
   if (!user) {
-    if (showLogin) return <LoginScreen onBack={() => setShowLogin(false)} />;
-    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
+    if (currentView === 'login') return <LoginScreen onBack={() => setCurrentView('landing')} />;
+    if (currentView === 'pricing') return <PricingPage onBack={() => setCurrentView('landing')} onSelectPlan={() => setCurrentView('login')} />;
+    return <LandingPage onLoginClick={() => setCurrentView('login')} onPricingClick={() => setCurrentView('pricing')} />;
   }
 
   return (
@@ -226,8 +231,8 @@ function App() {
       <main className={`main-content ${activeLesson ? 'split-view' : ''}`}>
         {activeLesson ? (
           <>
-            {/* PART A: Left 75% */}
-            <section className={`part-a ${activeChallenge ? 'has-challenge' : 'no-challenge'}`}>
+            {/* PART A: Whiteboard Tab */}
+            <section className={`part-a ${activeChallenge ? 'has-challenge' : ''} ${activeTab === 'board' ? 'tab-active' : ''}`}>
               <div className="row-c">
                 <LessonNotesPanel
                   lesson={activeLesson}
@@ -247,8 +252,8 @@ function App() {
               )}
             </section>
 
-            {/* PART B: Right 25% */}
-            <section className="part-b">
+            {/* PART B: Voice + Chat (desktop) / Chat-only (mobile) */}
+            <section className={`part-b ${activeTab === 'chat' ? 'tab-active' : ''}`}>
               <div className="row-e">
                 <div className="orb-section">
                   <VoiceOrb isListening={isListening} isSpeaking={isSpeaking} isProcessing={isProcessing} transcript={transcript} onClick={handleOrbClick} error={recogError} />
@@ -260,6 +265,35 @@ function App() {
                 </div>
               </div>
             </section>
+
+            {/* MOBILE: Floating Mic FAB */}
+            <button
+              className={`mobile-mic-fab ${isListening ? 'fab-listening' : ''} ${isSpeaking ? 'fab-speaking' : ''} ${isProcessing ? 'fab-thinking' : ''}`}
+              onClick={handleOrbClick}
+              disabled={isProcessing}
+              aria-label="Voice control"
+            >
+              {isProcessing ? <span className="fab-spinner" /> : isListening ? <Square size={26} /> : isSpeaking ? <Volume2 size={26} /> : <Mic size={26} />}
+            </button>
+
+            {/* MOBILE BOTTOM TAB BAR */}
+            <nav className="mobile-tab-bar">
+              <button
+                className={`tab-btn ${activeTab === 'board' ? 'active' : ''}`}
+                onClick={() => setActiveTab('board')}
+              >
+                {activeChallenge && activeTab !== 'board' && <span className="tab-challenge-dot" />}
+                <BookOpen size={20} />
+                Board
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >
+                <MessageSquare size={20} />
+                Chat
+              </button>
+            </nav>
           </>
         ) : (
           <div className="welcome-placeholder">

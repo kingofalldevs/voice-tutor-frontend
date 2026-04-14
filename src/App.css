@@ -1,7 +1,8 @@
+/* ──────────────── APP CONTAINER ──────────────── */
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background: var(--bg-deep);
   overflow: hidden;
@@ -9,32 +10,39 @@
   color: var(--text-main);
 }
 
+/* ── FLOATING MIC FAB (hidden on desktop) ── */
+.mobile-mic-fab {
+  display: none;
+}
+
+/* ──────────────── HEADER ──────────────── */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 3rem;
+  padding: 0.75rem 1.25rem;
   background: var(--bg-surface);
   border-bottom: 2px solid var(--primary-accent);
   z-index: 100;
+  flex-shrink: 0;
 }
 
 .app-header .logo-section {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.6rem;
   cursor: help;
 }
 
 .app-header .logo-img {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
 .logo {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 900;
   margin: 0;
   color: var(--primary-accent);
@@ -45,27 +53,27 @@
 .user-section {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--primary-accent);
+  border: 2px solid var(--primary-accent);
 }
 
 .signout-btn {
   background: transparent;
   color: var(--text-dim);
   border: 1px solid var(--glass-border);
-  padding: 0.4rem 1rem;
-  font-size: 0.7rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.65rem;
   font-weight: 800;
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   transition: all 0.2s;
 }
 
@@ -74,20 +82,99 @@
   color: #fff;
 }
 
+.local-badge {
+  background: #000;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+}
+
+/* ──────────────── LOADING ──────────────── */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  background: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* ──────────────── DIAGNOSTIC ──────────────── */
+.diagnostic-popup {
+  position: absolute;
+  top: 4.5rem;
+  left: 1rem;
+  background: #000;
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 4px;
+  z-index: 1000;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+/* ──────────────── WELCOME (no lesson selected) ──────────────── */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
+.welcome-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1.5rem;
+  background: #fff;
+  padding: 2rem;
+  text-align: center;
+}
+
+.welcome-placeholder h2 {
+  font-size: clamp(1.75rem, 6vw, 3.5rem);
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.04em;
+  color: var(--primary-accent);
+}
+
+.primary-btn {
+  background: var(--primary-accent);
+  color: #fff;
+  border: none;
+  padding: 0.9rem 2rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.primary-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px #999;
+}
+
+/* ──────────────── DESKTOP SPLIT VIEW ──────────────── */
 .main-content.split-view {
   display: grid;
   grid-template-columns: 75% 25%;
   height: 100%;
+  min-height: 0;
 }
 
-/* Part A: Left (75%) */
+/* Part A: Left (75%) — whiteboard + challenge */
 .part-a {
   display: grid;
   grid-template-rows: 1fr 0px;
@@ -95,16 +182,18 @@
   height: 100%;
   overflow: hidden;
   transition: grid-template-rows 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  min-height: 0;
 }
 
 .part-a.has-challenge {
-  grid-template-rows: 64% 36%;
+  grid-template-rows: 60% 40%;
 }
 
 .row-c {
   overflow: hidden;
   background: #fff;
   height: 100%;
+  min-height: 0;
 }
 
 .row-d {
@@ -115,6 +204,7 @@
   flex-direction: column;
   border-top: 2px solid var(--primary-accent);
   animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  min-height: 0;
 }
 
 @keyframes slideUp {
@@ -122,12 +212,13 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Part B: Right (25%) */
+/* Part B: Right (25%) — orb + chat */
 .part-b {
   display: grid;
   grid-template-rows: 50% 50%;
   height: 100%;
   overflow: hidden;
+  min-height: 0;
 }
 
 .row-e {
@@ -137,6 +228,7 @@
   justify-content: center;
   overflow: hidden;
   border-bottom: 2px solid var(--primary-accent);
+  min-height: 0;
 }
 
 .row-f {
@@ -144,6 +236,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .orb-section {
@@ -154,41 +247,222 @@
   align-items: center;
 }
 
-.loading-screen {
+.chat-section {
+  flex: 1;
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: #fff;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.diagnostic-popup {
-  position: absolute;
-  top: 5rem;
-  left: 3rem;
-  background: #000;
-  color: #fff;
-  padding: 1rem;
-  border-radius: 4px;
-  z-index: 1000;
-  font-family: monospace;
-  font-size: 0.75rem;
+/* ====================================================
+   MOBILE LAYOUT — Tab-based navigation (≤ 768px)
+   ==================================================== */
+@media (max-width: 768px) {
+
+  /* Override the desktop split grid entirely */
+  .main-content.split-view {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+  }
+
+  /* Part A & B become full-area tab panes */
+  .part-a,
+  .part-b {
+    display: none;
+    position: absolute;
+    inset: 0;
+    bottom: 64px;
+    width: 100%;
+    height: calc(100% - 0px);
+    border: none;
+    overflow: hidden;
+  }
+
+  .part-a {
+    flex-direction: column;
+    grid-template-columns: unset;
+    grid-template-rows: unset;
+  }
+
+  .part-a.has-challenge {
+    grid-template-rows: unset;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .part-a .row-c {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .part-a .row-d {
+    flex-shrink: 0;
+    height: auto;
+    max-height: 42%;
+    padding: 1rem;
+    border-top: 2px solid #000;
+  }
+
+  .part-b {
+    display: none;
+    flex-direction: column;
+    grid-template-rows: unset;
+  }
+
+  /* On mobile, hide the orb section inside part-b — mic is the FAB */
+  .part-b .row-e {
+    display: none;
+  }
+
+  /* Chat takes full height of the chat tab */
+  .part-b .row-f {
+    flex: 1;
+    min-height: 0;
+    border: none;
+  }
+
+  /* Active tab shown */
+  .part-a.tab-active,
+  .part-b.tab-active {
+    display: flex;
+  }
+
+  /* ── FLOATING MIC FAB ── */
+  .mobile-mic-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: calc(64px + 16px); /* above tab bar */
+    right: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+    border: none;
+    z-index: 300;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .mobile-mic-fab:active {
+    transform: scale(0.94);
+  }
+
+  .mobile-mic-fab:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Listening — pulsing green ring */
+  .mobile-mic-fab.fab-listening {
+    background: #111;
+    animation: fabPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(0,0,0,0.4);
+  }
+
+  @keyframes fabPulse {
+    0%   { box-shadow: 0 0 0 0   rgba(0,0,0,0.5); }
+    70%  { box-shadow: 0 0 0 18px rgba(0,0,0,0);  }
+    100% { box-shadow: 0 0 0 0   rgba(0,0,0,0);   }
+  }
+
+  /* Speaking — gentle ripple border */
+  .mobile-mic-fab.fab-speaking {
+    animation: fabSpeaking 0.6s ease-in-out infinite alternate;
+  }
+
+  @keyframes fabSpeaking {
+    from { box-shadow: 0 4px 20px rgba(0,0,0,0.3); transform: scale(1);    }
+    to   { box-shadow: 0 4px 30px rgba(0,0,0,0.5); transform: scale(1.07); }
+  }
+
+  /* Thinking — rotating ring overlay */
+  .mobile-mic-fab.fab-thinking {
+    background: #333;
+  }
+
+  .fab-spinner {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #fff;
+    animation: fabSpin 0.9s linear infinite;
+  }
+
+  @keyframes fabSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── BOTTOM NAV BAR ── */
+  .mobile-tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: #fff;
+    border-top: 2px solid #000;
+    display: flex;
+    z-index: 200;
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #eee;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    position: relative;
+  }
+
+  .tab-btn:last-child {
+    border-right: none;
+  }
+
+  .tab-btn.active {
+    background: #000;
+    color: #fff;
+  }
+
+  .tab-challenge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff3b30;
+    position: absolute;
+    top: 10px;
+    right: calc(50% - 20px);
+  }
 }
 
-.local-badge {
-  background: #000;
-  color: #fff;
-  font-size: 0.6rem;
-  font-weight: 800;
-  padding: 0.2rem 0.5rem;
-  border-radius: 2px;
-  margin-right: 1rem;
+/* Hide mobile tab bar and FAB on desktop */
+.mobile-tab-bar {
+  display: none;
 }
 
+/* ──────────────── misc ──────────────── */
 .interaction-placeholder {
   display: flex;
   flex-direction: column;
@@ -209,41 +483,5 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   margin-bottom: 1rem;
-}
-
-.welcome-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 2rem;
-  background: #fff;
-}
-
-.welcome-placeholder h2 {
-  font-size: 3.5rem;
-  font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.04em;
-  color: var(--primary-accent);
-}
-
-.primary-btn {
-  background: var(--primary-accent);
-  color: #fff;
-  border: none;
-  padding: 1rem 2.5rem;
-  border-radius: 8px;
-  font-weight: 800;
-  font-family: 'Outfit', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  box-shadow: 4px 4px 0px #eee;
-  transition: all 0.2s;
-}
-
-.primary-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px #ddd;
+  border-radius: 2px;
 }

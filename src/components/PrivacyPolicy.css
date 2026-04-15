@@ -1,0 +1,201 @@
+.privacy-container {
+  min-height: 100vh;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.privacy-nav {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1rem 0;
+  z-index: 100;
+}
+
+.privacy-nav .nav-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateX(-3px);
+}
+
+.privacy-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.privacy-header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.shield-icon {
+  width: 100px;
+  height: 100px;
+  background: var(--primary-accent);
+  color: white;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.privacy-header h1 {
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: -2px;
+  margin-bottom: 0.5rem;
+}
+
+.last-updated {
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.privacy-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.policy-intro {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 2rem;
+}
+
+.policy-card {
+  background: #ffffff;
+  padding: 3rem;
+  border-radius: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-deep);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  color: var(--primary-accent);
+}
+
+.policy-card h2 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+.policy-card p {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.policy-card ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.policy-card ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+.policy-card ul li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--primary-accent);
+  font-weight: bold;
+}
+
+.contact-footer {
+  text-align: center;
+  padding: 4rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+}
+
+.contact-footer h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.privacy-footer-simple {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .privacy-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .policy-card {
+    padding: 2rem;
+    border-radius: 24px;
+  }
+
+  .privacy-nav .nav-content {
+    padding: 0 1rem;
+  }
+
+  .back-btn span {
+    display: none;
+  }
+}

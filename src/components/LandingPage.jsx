@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Brain, Monitor, Mic, PlayCircle, UserPlus, Globe, Menu } from 'lucide-react';
 import './LandingPage.css';
 
-export default function LandingPage({ onLoginClick, onPricingClick }) {
+export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -282,7 +282,7 @@ export default function LandingPage({ onLoginClick, onPricingClick }) {
             </div>
             <div className="link-group">
               <h4>Legal</h4>
-              <span>Privacy</span>
+              <span onClick={onPrivacyClick}>Privacy</span>
               <span>Terms</span>
               <span>Security</span>
             </div>

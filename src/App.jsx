@@ -14,6 +14,7 @@ import useSpeechSynthesis from './hooks/useSpeechSynthesis'
 import useChat from './hooks/useChat'
 import MathRenderer from './components/MathRenderer'
 import MathChallenge from './components/MathChallenge'
+import PrivacyPolicy from './components/PrivacyPolicy'
 import { BookOpen, Mic, Square, Volume2, MessageSquare } from 'lucide-react'
 import './App.css'
 
@@ -24,7 +25,7 @@ function App() {
   const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
   const [isProcessingLocal, setIsProcessingLocal] = useState(false)
   const [showDiagnostics, setShowDiagnostics] = useState(false)
-  const [currentView, setCurrentView] = useState('landing') // 'landing' | 'pricing' | 'login'
+  const [currentView, setCurrentView] = useState('landing') // 'landing' | 'pricing' | 'login' | 'privacy'
 
   // Lesson & Challenge State
   const [activeLesson, setActiveLesson] = useState(null)
@@ -200,7 +201,12 @@ function App() {
   if (!user) {
     if (currentView === 'login') return <LoginScreen onBack={() => setCurrentView('landing')} />;
     if (currentView === 'pricing') return <PricingPage onBack={() => setCurrentView('landing')} onSelectPlan={() => setCurrentView('login')} />;
-    return <LandingPage onLoginClick={() => setCurrentView('login')} onPricingClick={() => setCurrentView('pricing')} />;
+    if (currentView === 'privacy') return <PrivacyPolicy onBackClick={() => setCurrentView('landing')} />;
+    return <LandingPage 
+      onLoginClick={() => setCurrentView('login')} 
+      onPricingClick={() => setCurrentView('pricing')} 
+      onPrivacyClick={() => setCurrentView('privacy')} 
+    />;
   }
 
   return (

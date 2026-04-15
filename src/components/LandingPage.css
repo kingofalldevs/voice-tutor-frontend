@@ -141,7 +141,7 @@
   font-weight: 700;
   letter-spacing: 0.8px;
   color: var(--text-dim);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .hero-title {
@@ -261,7 +261,7 @@
   background: var(--bg-deep);
   border-radius: 32px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(0,0,0,0.04);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .feature-card:hover {
@@ -361,11 +361,12 @@
   flex-direction: column;
   background: #ffffff;
   border-radius: 38px;
-  border: 8px solid #111; /* Simulates device frame */
-  box-shadow: -20px 40px 80px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1);
+  border: 8px solid #111;
+  /* Simulates device frame */
+  box-shadow: -20px 40px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   z-index: 10;
-  
+
   /* The "Premium Slant" */
   transform: rotate(-4deg) translateY(0) scale(1.0);
   transform-origin: bottom right;
@@ -396,7 +397,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .mobile-content-wrap {
@@ -443,7 +444,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .mobile-home-indicator {
@@ -489,7 +490,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   font-size: 0.85rem;
   cursor: pointer;
@@ -506,7 +507,7 @@
 .mockup-board {
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .mockup-board-header {
@@ -569,7 +570,7 @@
   padding: 3rem 2rem;
   gap: 3rem;
   background: #fafafa;
-  border-left: 1px solid rgba(0,0,0,0.05);
+  border-left: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .mockup-orb {
@@ -601,7 +602,7 @@
 }
 
 .mockup-chat {
-  border-top: 1px solid rgba(0,0,0,0.07);
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
   padding-top: 2rem;
   width: 100%;
 }
@@ -641,8 +642,8 @@
   padding: 3rem;
   background: #ffffff;
   border-radius: 24px;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -651,7 +652,7 @@
 
 .review-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
 }
 
 .review-stars {
@@ -681,7 +682,7 @@
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
 }
 
@@ -810,6 +811,7 @@
 
 /* Small Tablet */
 @media (max-width: 900px) {
+
   .features-grid,
   .reviews-grid {
     grid-template-columns: 1fr;
@@ -834,6 +836,7 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+
   /* --- Nav --- */
   .landing-nav {
     padding: 0.6rem 1.2rem;

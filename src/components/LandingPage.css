@@ -791,6 +791,8 @@
 }
 
 /* ---- Responsive ---- */
+
+/* Tablet */
 @media (max-width: 1024px) {
   .hero-title {
     font-size: clamp(3rem, 7vw, 4.5rem);
@@ -806,36 +808,46 @@
   }
 }
 
+/* Small Tablet */
 @media (max-width: 900px) {
   .features-grid,
   .reviews-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  
+
   .mockups-container {
-    transform: translateX(-50%) scale(0.7);
+    transform: translateX(-50%) scale(0.65);
     transform-origin: top center;
-    margin-bottom: -200px;
+    margin-bottom: -220px;
   }
 
   .footer-top {
     flex-direction: column;
     gap: 3rem;
   }
+
+  .footer-brand {
+    max-width: 100%;
+  }
 }
 
+/* Mobile */
 @media (max-width: 768px) {
+  /* --- Nav --- */
   .landing-nav {
-    padding: 0.8rem 1.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 16px;
+    top: 0.5rem;
+    width: 94%;
   }
-  
+
   .nav-links {
     display: none;
   }
-  
+
   .nav-login-btn {
-    display: none; /* Hide signin text on mobile, just show icon menu if desired, or keep it */
+    display: none;
   }
 
   .mobile-menu-btn {
@@ -851,7 +863,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
     background: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 16px;
@@ -869,7 +881,7 @@
     text-align: center;
     cursor: pointer;
   }
-  
+
   .mobile-nav-link:active {
     color: var(--primary-accent);
   }
@@ -886,47 +898,122 @@
     cursor: pointer;
   }
 
+  /* --- Hero --- */
   .hero-section {
-    padding: 8rem 1.5rem 4rem;
+    min-height: 100vh;
+    padding: 6rem 1.25rem 3rem;
+  }
+
+  .hero-content {
+    padding: 0 0.5rem;
+    gap: 1.5rem;
+    text-align: center;
+    align-items: center;
   }
 
   .hero-title {
-    font-size: clamp(2.5rem, 9vw, 3.5rem);
+    font-size: 2.4rem;
     letter-spacing: -1.5px;
+    line-height: 1.1;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 100%;
   }
 
   .hero-actions {
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    margin: 0 auto;
+    gap: 1rem;
   }
 
   .hero-btn-watch,
   .hero-btn-signup {
     width: 100%;
     justify-content: center;
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
   }
 
-  .preview-section,
-  .features-section {
-    padding: 4rem 1.5rem;
+  /* --- Preview / Mockups --- */
+  .preview-section {
+    padding: 3rem 1.25rem;
   }
 
-  .preview-title,
-  .section-title {
-    font-size: 2.2rem;
+  .preview-title {
+    font-size: 2rem;
+    letter-spacing: -1px;
   }
-  
+
+  .preview-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
   .mockups-container {
-    transform: translateX(-50%) scale(0.5);
+    transform: translateX(-50%) scale(0.42);
     transform-origin: top center;
-    margin-bottom: -320px;
+    margin-bottom: -380px;
   }
-  
+
+  /* --- Features --- */
+  .features-section {
+    padding: 3rem 1.25rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    letter-spacing: -1px;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
   .feature-card,
   .review-card {
-    padding: 2.5rem 2rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.35rem;
+  }
+
+  .feature-card p {
+    font-size: 1rem;
+  }
+
+  .f-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* --- Reviews --- */
+  .reviews-section {
+    padding: 3rem 1.25rem;
+  }
+
+  .review-text {
+    font-size: 1rem;
+  }
+
+  .review-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* --- Footer --- */
+  .landing-footer {
+    padding: 3rem 1.25rem 2rem;
+  }
+
+  .footer-top {
+    margin-bottom: 3rem;
   }
 
   .footer-links-grid {
@@ -940,24 +1027,59 @@
     align-items: center;
     text-align: center;
   }
-  
+
   .social-links {
     gap: 1.5rem;
   }
 }
 
+/* Small Phone */
 @media (max-width: 480px) {
-  .mockups-container {
-    transform: translateX(-50%) scale(0.35);
-    transform-origin: top center;
-    margin-bottom: -430px;
+  .hero-section {
+    padding: 5rem 1rem 2rem;
   }
-  
-  .hero-content {
-    margin-top: 3rem;
-  }
-  
+
   .hero-title {
-    font-size: 2.2rem;
+    font-size: 2rem;
+    letter-spacing: -1px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .mockups-container {
+    transform: translateX(-50%) scale(0.32);
+    transform-origin: top center;
+    margin-bottom: -460px;
+  }
+
+  .preview-section,
+  .features-section,
+  .reviews-section {
+    padding: 2.5rem 1rem;
+  }
+
+  .section-title,
+  .preview-title {
+    font-size: 1.75rem;
+  }
+
+  .feature-card,
+  .review-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .review-author {
+    gap: 0.75rem;
+  }
+
+  .review-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .landing-footer {
+    padding: 2rem 1rem;
   }
 }

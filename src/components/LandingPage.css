@@ -1047,7 +1047,7 @@
 /* Small Phone */
 @media (max-width: 480px) {
   .hero-section {
-    padding: 5rem 1rem 2rem;
+    padding: 7.5rem 1rem 3rem;
   }
 
   .hero-title {

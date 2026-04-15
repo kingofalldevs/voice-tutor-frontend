@@ -205,32 +205,52 @@ export default function LandingPage({ onLoginClick, onPricingClick }) {
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"My daughter used to dread math homework. Now she logs into Nova every day just to 'talk to her math friend.' Her grades have skyrocketed!"</p>
                 <div className="review-author">
-                  <strong>Sarah T.</strong>
-                  <span>Parent of a 5th Grader</span>
+                  <div className="review-avatar">
+                    <img src="/rev-1.png" alt="Sarah T." />
+                  </div>
+                  <div className="author-info">
+                    <strong>Sarah T.</strong>
+                    <span>Parent of a 5th Grader</span>
+                  </div>
                 </div>
               </div>
               <div className="review-card">
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"As a teacher, having Nova walk my students through the Ghanaian curriculum step-by-step is an absolute game-changer for classroom reinforcement."</p>
                 <div className="review-author">
-                  <strong>Mr. Osei</strong>
-                  <span>Middle School Math Teacher</span>
+                  <div className="review-avatar">
+                    <img src="/rev-2.png" alt="Mr. Osei" />
+                  </div>
+                  <div className="author-info">
+                    <strong>Mr. Osei</strong>
+                    <span>Middle School Math Teacher</span>
+                  </div>
                 </div>
               </div>
               <div className="review-card">
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"The live whiteboard feature is brilliant. It feels exactly like sitting next to a private tutor who is patient enough to explain fractions ten times over."</p>
                 <div className="review-author">
-                  <strong>Emily R.</strong>
-                  <span>High School Student</span>
+                  <div className="review-avatar">
+                    <img src="/rev-3.png" alt="Emily R." />
+                  </div>
+                  <div className="author-info">
+                    <strong>Emily R.</strong>
+                    <span>High School Student</span>
+                  </div>
                 </div>
               </div>
               <div className="review-card">
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"I love that I can just speak to it instead of typing complex math formulas. It understands my voice instantly and responds clearly. Highly recommended."</p>
                 <div className="review-author">
-                  <strong>James K.</strong>
-                  <span>University Prep</span>
+                  <div className="review-avatar">
+                    <img src="/rev-4.png" alt="James K." />
+                  </div>
+                  <div className="author-info">
+                    <strong>James K.</strong>
+                    <span>University Prep</span>
+                  </div>
                 </div>
               </div>
             </div>

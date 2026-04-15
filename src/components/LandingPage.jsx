@@ -190,6 +190,52 @@ export default function LandingPage({ onLoginClick, onPricingClick }) {
             </div>
           </div>
         </section>
+
+        {/* Reviews Section */}
+        <section className="reviews-section">
+          <div className="reviews-content-wrap">
+            <div className="section-header">
+              <h2 className="section-title">What Our Users Say</h2>
+              <p className="section-subtitle">
+                See how Nova is transforming the way students master mathematics globally.
+              </p>
+            </div>
+            <div className="reviews-grid">
+              <div className="review-card">
+                <div className="review-stars">★★★★★</div>
+                <p className="review-text">"My daughter used to dread math homework. Now she logs into Nova every day just to 'talk to her math friend.' Her grades have skyrocketed!"</p>
+                <div className="review-author">
+                  <strong>Sarah T.</strong>
+                  <span>Parent of a 5th Grader</span>
+                </div>
+              </div>
+              <div className="review-card">
+                <div className="review-stars">★★★★★</div>
+                <p className="review-text">"As a teacher, having Nova walk my students through the Ghanaian curriculum step-by-step is an absolute game-changer for classroom reinforcement."</p>
+                <div className="review-author">
+                  <strong>Mr. Osei</strong>
+                  <span>Middle School Math Teacher</span>
+                </div>
+              </div>
+              <div className="review-card">
+                <div className="review-stars">★★★★★</div>
+                <p className="review-text">"The live whiteboard feature is brilliant. It feels exactly like sitting next to a private tutor who is patient enough to explain fractions ten times over."</p>
+                <div className="review-author">
+                  <strong>Emily R.</strong>
+                  <span>High School Student</span>
+                </div>
+              </div>
+              <div className="review-card">
+                <div className="review-stars">★★★★★</div>
+                <p className="review-text">"I love that I can just speak to it instead of typing complex math formulas. It understands my voice instantly and responds clearly. Highly recommended."</p>
+                <div className="review-author">
+                  <strong>James K.</strong>
+                  <span>University Prep</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="landing-footer">

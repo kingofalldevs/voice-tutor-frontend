@@ -905,16 +905,20 @@
   }
 
   .hero-content {
-    padding: 0 0.5rem;
+    padding: 0 1rem;
     gap: 1.5rem;
     text-align: center;
     align-items: center;
   }
 
+  .hero-br {
+    display: none;
+  }
+
   .hero-title {
     font-size: 2.4rem;
     letter-spacing: -1.5px;
-    line-height: 1.1;
+    line-height: 1.15;
   }
 
   .hero-subtitle {

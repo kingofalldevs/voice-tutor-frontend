@@ -44,8 +44,8 @@ export default function LandingPage({ onLoginClick, onPricingClick }) {
           <div className="hero-overlay"></div>
           <div className="hero-content">
             <h1 className="hero-title">
-              Meet <span className="highlight-text">Nova.</span><span className="hero-br"><br /></span>
-              The World's Most Advanced<span className="hero-br"><br /></span>
+              Meet <span className="highlight-text">Nova.</span> <span className="hero-br"><br /></span>
+              The World's Most Advanced <span className="hero-br"><br /></span>
               AI Math Tutor.
             </h1>
             <p className="hero-subtitle">

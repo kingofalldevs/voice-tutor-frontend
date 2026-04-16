@@ -17,43 +17,35 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
     if (profile?.learning_path_id && user?.uid) {
       fetchData();
     }
-  }, [profile, user]);
+  }, [user]);
 
   const fetchData = async (isManual = false) => {
     setLoading(true);
     setFetchError(null);
     
-    // Safety timeout for the loading screen (extended for mobile/cold starts)
+    // Extended timeout for scraping all grades
     const timeout = setTimeout(() => {
-      if (standards.length === 0) {
+      if (Object.keys(standards).length === 0) {
         setLoading(false);
-        setFetchError("Connection timed out. Render server might be waking up. Please click Sync again in 10 seconds.");
+        setFetchError("Connection timed out. Retrieving the full academy curriculum...");
       }
-    }, 15000);
+    }, 20000);
 
     try {
-      // Use the ENV URL or fallback to the known production URL
       const baseUrl = import.meta.env.VITE_API_URL || 'https://voice-tutor-backend.onrender.com';
-      console.log(`Nova Debug: Fetching from ${baseUrl} for path ${profile.learning_path_id}`);
-
-      // Add a cache-buster if manual sync
       const cacheBust = isManual ? `?t=${Date.now()}` : '';
       
-      const [stdResp, progResp] = await Promise.all([
-        fetch(`${baseUrl}/curriculum/${profile.learning_path_id}${cacheBust}`),
+      const [allResp, progResp] = await Promise.all([
+        fetch(`${baseUrl}/curriculum/all${cacheBust}`),
         fetch(`${baseUrl}/progress/${user.uid}${cacheBust}`)
       ]);
 
-      if (!stdResp.ok) throw new Error(`Server returned ${stdResp.status}`);
+      if (!allResp.ok) throw new Error(`Server returned ${allResp.status}`);
       
-      const [stdData, progData] = await Promise.all([stdResp.json(), progResp.json()]);
+      const allData = await allResp.json();
+      const progData = await progResp.json();
       
-      if (Array.isArray(stdData)) {
-        setStandards(stdData);
-      } else {
-        throw new Error("Invalid curriculum data format received.");
-      }
-      
+      setStandards(allData); // Now an object with keys: Elementary, Middle, High
       setProgress(progData);
       clearTimeout(timeout);
       setLoading(false);
@@ -63,6 +55,51 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
       clearTimeout(timeout);
       setLoading(false);
     }
+  };
+
+  const renderSection = (title, items) => {
+    if (!items || items.length === 0) return null;
+    return (
+      <div className="curriculum-category-section" key={title}>
+        <div className="category-header">
+          <div className="cat-icon-blob"></div>
+          <h2>{title}</h2>
+          <span className="count-pill">{items.length} MODULES</span>
+        </div>
+        
+        <div className="standard-grid">
+          {items.map((std) => {
+            const masteryVal = getStandardProgress(std);
+            return (
+              <div 
+                key={std.id} 
+                className="standard-card"
+                onClick={() => onSelectStandard(std)}
+              >
+                <div className="card-top-info">
+                  <div className="standard-tag">{std.domain}</div>
+                  <div className="grade-badge">GRADE {std.grade}</div>
+                </div>
+                <h3>{std.title}</h3>
+                <p>{std.description}</p>
+                
+                <footer className="standard-footer">
+                  <div className="mastery-progress">
+                    <div className="progress-circle" style={{ '--progress': `${masteryVal}%` }}>
+                      <span className="progress-val">{masteryVal}%</span>
+                    </div>
+                  </div>
+                  <button className="start-btn">
+                    <span className="btn-text">Start Class</span>
+                    <ArrowRight size={20} />
+                  </button>
+                </footer>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const getStandardProgress = (std) => {
@@ -193,34 +230,11 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
               </div>
             )}
 
-            {standards.length > 0 ? (
-              <div className="standard-grid">
-                {standards.map((std) => {
-                  const masteryVal = getStandardProgress(std);
-                  return (
-                    <div 
-                      key={std.id} 
-                      className="standard-card"
-                      onClick={() => onSelectStandard(std)}
-                    >
-                      <div className="standard-tag">{std.domain}</div>
-                      <h3>{std.title}</h3>
-                      <p>{std.description}</p>
-                      
-                      <footer className="standard-footer">
-                        <div className="mastery-progress">
-                          <div className="progress-circle" style={{ '--progress': `${masteryVal}%` }}>
-                            <span className="progress-val">{masteryVal}%</span>
-                          </div>
-                        </div>
-                        <button className="start-btn">
-                          <span className="btn-text">Start Class</span>
-                          <ArrowRight size={20} />
-                        </button>
-                      </footer>
-                    </div>
-                  );
-                })}
+            {Object.keys(standards).length > 0 ? (
+              <div className="categorized-academy-view">
+                {renderSection("Elementary School", standards["Elementary School"])}
+                {renderSection("Middle School", standards["Middle School"])}
+                {renderSection("High School", standards["High School"])}
               </div>
             ) : (
               <div className="discovery-empty-state">

@@ -13,12 +13,23 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
 
   const [fetchError, setFetchError] = useState(null);
 
+  const [visibleCounts, setVisibleCounts] = useState({
+    "Elementary School": 6,
+    "Middle School": 6,
+    "High School": 6
+  });
+
   useEffect(() => {
-    if (profile?.learning_path_id && user?.uid) {
+    if (user?.uid) {
       fetchData();
     }
   }, [user]);
 
+  const loadMore = (category) => {
+    setVisibleCounts(prev => ({
+      ...prev,
+      [category]: prev[category] + 12
+    }));
   const fetchData = async (isManual = false) => {
     setLoading(true);
     setFetchError(null);
@@ -59,6 +70,9 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
 
   const renderSection = (title, items) => {
     if (!items || items.length === 0) return null;
+    const visibleItems = items.slice(0, visibleCounts[title]);
+    const hasMore = items.length > visibleCounts[title];
+
     return (
       <div className="curriculum-category-section" key={title}>
         <div className="category-header">
@@ -68,7 +82,7 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
         </div>
         
         <div className="standard-grid">
-          {items.map((std) => {
+          {visibleItems.map((std) => {
             const masteryVal = getStandardProgress(std);
             return (
               <div 
@@ -98,18 +112,28 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
             );
           })}
         </div>
+
+        {hasMore && (
+          <div className="load-more-container">
+            <button className="load-more-btn" onClick={() => loadMore(title)}>
+              Discover More In {title} <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
       </div>
     );
   };
 
   const getStandardProgress = (std) => {
+    // If skimming mode enabled on backend, we skip mastery in the main list for speed
     if (!std.skills || std.skills.length === 0) return 0;
     let totalMastery = 0;
     std.skills.forEach(skill => {
-      const skillProg = progress[skill.id];
-      if (skillProg) totalMastery += skillProg.mastery || 0;
+      if (progress[skill.id]) {
+        totalMastery += (progress[skill.id].mastery || 0) * 100;
+      }
     });
-    return Math.round((totalMastery / std.skills.length) * 100);
+    return Math.round(totalMastery / std.skills.length);
   };
 
   if (loading) return <div className="loading-screen">Loading Curriculum...</div>;

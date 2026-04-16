@@ -87,12 +87,6 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
 
       <nav className="dashboard-nav">
         <div className="dash-nav-left">
-          <button 
-            className="mobile-menu-toggle" 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
           <div className="dash-logo">
             <Brain size={24} className="logo-sparkle" />
             <h1>MathNova</h1>
@@ -115,8 +109,50 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
             <Settings size={20} />
             <span className="hide-mobile">Settings</span>
           </div>
+          <button 
+            className="mobile-menu-toggle" 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Drawer */}
+      {isSidebarOpen && (
+        <div className="mobile-drawer-overlay" onClick={() => setIsSidebarOpen(false)}>
+          <div className="mobile-drawer" onClick={e => e.stopPropagation()}>
+            <div className="drawer-header">
+              <div className="dash-logo">
+                <Brain className="logo-sparkle" size={24} />
+                <h1>MathNova</h1>
+              </div>
+              <button className="close-drawer" onClick={() => setIsSidebarOpen(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="drawer-links">
+              <div className="drawer-link active" onClick={() => setIsSidebarOpen(false)}>
+                <BookOpen size={20}/> <span>My Courses</span>
+              </div>
+              <div className="drawer-link" onClick={() => setIsSidebarOpen(false)}>
+                <TrendingUp size={20}/> <span>Analytics</span>
+              </div>
+              <div className="drawer-link" onClick={() => setIsSidebarOpen(false)}>
+                <Star size={20}/> <span>Achievements</span>
+              </div>
+              <div className="drawer-divider"></div>
+              <div className="drawer-link" onClick={onSettingsClick}>
+                <Settings size={20}/> <span>Settings</span>
+              </div>
+              <div className="drawer-link" onClick={() => signOut(auth)}>
+                <LogOut size={20}/> <span>Sign Out</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="dashboard-main-layout">
 

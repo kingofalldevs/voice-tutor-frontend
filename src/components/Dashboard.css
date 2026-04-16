@@ -594,6 +594,120 @@
   color: var(--dash-accent);
 }
 
+/* Mobile Navigation (Logo Left, Menu Right) */
+@media (max-width: 768px) {
+  .dashboard-nav {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .dash-nav-center {
+    display: none; /* Hide center tabs on mobile */
+  }
+
+  .dash-nav-left {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .dash-nav-right {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+
+  .nav-settings-tab {
+    display: none !important; /* Hide settings on main nav for mobile (moved to drawer) */
+  }
+
+  .mobile-menu-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile Drawer Styles */
+.mobile-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 3000;
+  animation: fadeIn 0.3s ease;
+}
+
+.mobile-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 85%;
+  max-width: 320px;
+  height: 100vh;
+  background: #ffffff;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
+  animation: slideLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.close-drawer {
+  background: #f5f5f5;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #444;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.drawer-link.active {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000;
+}
+
+.drawer-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 1rem 0;
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 @media (max-width: 1024px) {
   .dashboard-main-layout {
     grid-template-columns: 1fr;

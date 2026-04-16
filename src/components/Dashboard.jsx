@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, BookOpen, Settings, Star, TrendingUp, RefreshCw, Brain, Menu, X, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, BookOpen, Settings, Star, TrendingUp, RefreshCw, Brain, Menu, X, Eye, EyeOff, LogOut } from 'lucide-react';
+import { auth } from '../firebase/config';
+import { signOut } from 'firebase/auth';
 import './Dashboard.css';
 
 export default function Dashboard({ user, profile, onSelectStandard, onSettingsClick }) {

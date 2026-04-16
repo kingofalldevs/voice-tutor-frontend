@@ -2,40 +2,40 @@ import React, { useState, useEffect } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from './firebase/config'
+import { doc, getDoc } from 'firebase/firestore'
 import LandingPage from './components/LandingPage'
 import PricingPage from './components/PricingPage'
 import LoginScreen from './components/LoginScreen'
+import PrivacyPolicy from './components/PrivacyPolicy'
+import SettingsPage from './components/SettingsPage'
+import Dashboard from './components/Dashboard'
 import VoiceOrb from './components/VoiceOrb'
 import ChatHistory from './components/ChatHistory'
-import LessonPickerModal from './components/LessonPickerModal'
 import LessonNotesPanel from './components/LessonNotesPanel'
 import useSpeechRecognition from './hooks/useSpeechRecognition'
 import useSpeechSynthesis from './hooks/useSpeechSynthesis'
 import useChat from './hooks/useChat'
 import MathRenderer from './components/MathRenderer'
 import MathChallenge from './components/MathChallenge'
-import PrivacyPolicy from './components/PrivacyPolicy'
-import { BookOpen, Mic, Square, Volume2, MessageSquare } from 'lucide-react'
+import { BookOpen, Mic, Square, Volume2, MessageSquare, ChevronLeft } from 'lucide-react'
 import './App.css'
 
 function App() {
   const [user, setUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [messages, setMessages] = useState([])
-  const [persistenceMode, setPersistenceMode] = useState('firebase') // 'firebase' or 'local'
-  const [isProcessingLocal, setIsProcessingLocal] = useState(false)
+  const [persistenceMode, setPersistenceMode] = useState('firebase') 
   const [showDiagnostics, setShowDiagnostics] = useState(false)
   const [currentView, setCurrentView] = useState('landing') // 'landing' | 'pricing' | 'login' | 'privacy'
 
-  // Lesson & Challenge State
-  const [activeLesson, setActiveLesson] = useState(null)
-  const [currentChapterId, setCurrentChapterId] = useState(1)
-  const [activeChallenge, setActiveChallenge] = useState(null)
+  // Curriculum & Lesson State
+  const [activeStandard, setActiveStandard] = useState(null)
+  const [activeSkill, setActiveSkill] = useState(null)
   const [whiteboardBlocks, setWhiteboardBlocks] = useState([])
-  const [showPicker, setShowPicker] = useState(false)
   const [lastActivity, setLastActivity] = useState(Date.now())
   const [pendingLessonStart, setPendingLessonStart] = useState(false)
-  const [activeTab, setActiveTab] = useState('board') // 'board' | 'voice'
+  const [activeTab, setActiveTab] = useState('board') // 'board' | 'chat'
 
   const { isListening, transcript, startListening, stopListening, error: recogError, setTranscript } = useSpeechRecognition((finalText) => {
     if (finalText.trim() !== '' && !isProcessing) {
@@ -52,127 +52,96 @@ function App() {
     user,
     messages,
     saveMessage: (role, content) => saveMessage(role, content),
-    activeLesson,
-    currentChapterId,
-    setCurrentChapterId,
+    activeLesson: activeStandard, 
+    currentSkillId: activeSkill?.id,
     setWhiteboardBlocks,
-    setActiveChallenge,
     setLastActivity,
     speak
   });
 
-  // Silence Monitor
+  // Auth Listener + Profile Fetch
   useEffect(() => {
-    if (!activeLesson || isProcessing || isSpeaking || isListening || activeChallenge) return;
-    const silenceCheck = setInterval(() => {
-      const idleTime = Date.now() - lastActivity;
-      if (idleTime > 15000) {
-        setLastActivity(Date.now());
-        handleUserSpeechContent("[USER_SILENCE]");
-      }
-    }, 5000);
-    return () => clearInterval(silenceCheck);
-  }, [activeLesson, isProcessing, isSpeaking, isListening, lastActivity, activeChallenge]);
+    // 1. GLOBAL SAFETY VALVE: Never hang more than 3s
+    const safetyValve = setTimeout(() => {
+      console.warn("Safety valve triggered: Force clearing loading states.");
+      setAuthLoading(false);
+      setProfileLoading(false);
+    }, 3000);
 
-  // Auth Listener
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser)
-      setAuthLoading(false)
-      if (currentUser) setShowPicker(true);
-    })
-    return () => unsub()
+      setProfileLoading(true)
+      
+      try {
+        if (currentUser) {
+          const profDoc = await getDoc(doc(db, 'users', currentUser.uid))
+          if (profDoc.exists()) {
+            setUserProfile(profDoc.data())
+          }
+        } else {
+          setUserProfile(null)
+        }
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+      } finally {
+        setProfileLoading(false)
+        setAuthLoading(false)
+        clearTimeout(safetyValve);
+      }
+    });
+
+    return () => {
+      unsub();
+      clearTimeout(safetyValve);
+    }
   }, [])
 
-  // Messages Sync - Handles both Firebase and Local fallback (Isolated by Lesson)
+  // Messages Sync (Isolated by Skill)
   useEffect(() => {
-    // Always clear immediately when lesson changes to prevent stale data flash
     setMessages([]);
+    if (!user || !activeSkill) return;
 
-    if (!user || !activeLesson) return;
-
-    if (persistenceMode === 'firebase') {
-      const q = query(
-        collection(db, `chats/${user.uid}/lessons/${activeLesson.id}/messages`),
-        orderBy('timestamp', 'desc'),
-        limit(50)
-      )
-      const unsub = onSnapshot(q, (snapshot) => {
-        const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        setMessages(msgs.reverse())
-      }, (error) => {
-        if (error.code === 'permission-denied') {
-          console.warn("Firestore permissions denied. Switching to Local Storage fallback.");
-          setPersistenceMode('local');
-        }
-      });
-      return () => unsub()
-    } else {
-      // Local Storage Fallback
-      const localKey = `nova_chat_${user.uid}_${activeLesson.id}`;
-      const saved = localStorage.getItem(localKey);
-      setMessages(saved ? JSON.parse(saved) : []);
-    }
-  }, [user, activeLesson, persistenceMode])
+    const q = query(
+      collection(db, `chats/${user.uid}/skills/${activeSkill.id}/messages`),
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    )
+    const unsub = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setMessages(msgs.reverse())
+    });
+    return () => unsub()
+  }, [user, activeSkill])
 
   const saveMessage = async (role, content) => {
-    if (!user || !activeLesson) return;
+    if (!user || !activeSkill) return;
     const msgData = { role, content, timestamp: serverTimestamp() };
-
-    if (persistenceMode === 'firebase') {
-      try {
-        await addDoc(collection(db, `chats/${user.uid}/lessons/${activeLesson.id}/messages`), msgData);
-      } catch (err) {
-        if (err.code === 'permission-denied' || err.message.includes('permission')) {
-          setPersistenceMode('local');
-          saveToLocal(role, content);
-        }
-      }
-    } else {
-      saveToLocal(role, content);
-    }
-  };
-
-  const saveToLocal = (role, content) => {
-    if (!activeLesson) return;
-    const localKey = `nova_chat_${user.uid}_${activeLesson.id}`;
-    const msg = { role, content, timestamp: new Date().toISOString(), id: Date.now() };
-    setMessages(prev => {
-      const updated = [...prev, msg];
-      localStorage.setItem(localKey, JSON.stringify(updated.slice(-50)));
-      return updated;
-    });
-  };
-
-  const handleLessonSelect = async (lessonId) => {
-    setShowPicker(false)
-    setActiveChallenge(null)
-    setWhiteboardBlocks([])  // Clear whiteboard
-    setMessages([])          // Immediately wipe messages before anything loads
-    setActiveLesson(null)    // Reset lesson to trigger clean effect execution
-    setActiveTab('board')    // Always start on board tab
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL}/lessons/${lessonId}`)
-      const data = await resp.json()
-      setCurrentChapterId(1)
-      setLastActivity(Date.now())
-      setActiveLesson(data)  // Set new lesson AFTER clearing state
-      setPendingLessonStart(true) // Trigger effect to send start message
+      await addDoc(collection(db, `chats/${user.uid}/skills/${activeSkill.id}/messages`), msgData);
     } catch (err) {
-      console.error("Error loading lesson:", err)
+      console.error("Save message error:", err);
     }
+  };
+
+  const handleSelectStandard = (std) => {
+    const firstSkill = std.skills?.[0];
+    setActiveStandard(std);
+    setActiveSkill(firstSkill);
+    setWhiteboardBlocks([]);
+    setMessages([]);
+    setPendingLessonStart(true);
   }
 
-  // Handle Lesson Start Signal cleanly (avoids stale closures from handleLessonSelect)
+  // Handle Lesson Start
   useEffect(() => {
-    if (pendingLessonStart && activeLesson) {
+    if (pendingLessonStart && activeSkill) {
       const timer = setTimeout(() => {
         sendMessage("start");
         setPendingLessonStart(false);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [pendingLessonStart, activeLesson, sendMessage])
+  }, [pendingLessonStart, activeSkill, sendMessage])
 
   const handleChallengeResult = (isCorrect, userAnswer) => {
     setLastActivity(Date.now());
@@ -198,6 +167,7 @@ function App() {
 
   if (authLoading) return <div className="loading-screen">Loading Nova...</div>;
 
+  // VIEW ROUTING
   if (!user) {
     if (currentView === 'login') return <LoginScreen onBack={() => setCurrentView('landing')} />;
     if (currentView === 'pricing') return <PricingPage onBack={() => setCurrentView('landing')} onSelectPlan={() => setCurrentView('login')} />;
@@ -209,107 +179,83 @@ function App() {
     />;
   }
 
+  // Authenticated State Preparation
+  const effectiveProfile = userProfile || {
+    name: user.displayName || 'Student',
+    country: 'US',
+    grade: '6',
+    learning_path_id: 'us_grade_6'
+  };
+
+  // Authenticated: Dashboard or Tutor
+  if (currentView === 'settings') {
+    return (
+      <SettingsPage 
+        user={user} 
+        profile={effectiveProfile} 
+        onBack={() => setCurrentView('dashboard')}
+        onUpdateProfile={(newProfile) => setUserProfile(newProfile)}
+      />
+    );
+  }
+
+  if (activeStandard) {
+    return (
+      <div className="app-container">
+        <header className="app-header">
+          <div className="logo-section" onClick={() => setActiveStandard(null)}>
+            <ChevronLeft size={24} style={{ cursor: 'pointer' }} />
+            <span className="skill-tag">{activeStandard.id}</span>
+            <h1 className="logo-compact">{activeSkill?.title || 'Learning'}</h1>
+          </div>
+          <div className="user-section">
+            <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="Avatar" className="avatar" />
+            <button className="signout-btn" onClick={() => { cancelSpeak(); signOut(auth); }}>Sign Out</button>
+          </div>
+        </header>
+
+        <main className="main-content split-view">
+          <section className={`part-a ${activeTab === 'board' ? 'tab-active' : ''}`}>
+            <div className="row-c">
+              <LessonNotesPanel
+                lesson={activeStandard}
+                whiteboardBlocks={whiteboardBlocks}
+                currentChapterId={1}
+                onChapterChange={() => {}}
+              />
+            </div>
+          </section>
+
+          <section className={`part-b ${activeTab === 'chat' ? 'tab-active' : ''}`}>
+            <div className="row-e">
+              <div className="orb-section">
+                <VoiceOrb isListening={isListening} isSpeaking={isSpeaking} isProcessing={isProcessing} transcript={transcript} onClick={handleOrbClick} error={recogError} />
+              </div>
+            </div>
+            <div className="row-f">
+              <div className="chat-section">
+                <ChatHistory messages={messages} />
+              </div>
+            </div>
+          </section>
+
+          <nav className="mobile-tab-bar">
+            <button className={`tab-btn ${activeTab === 'board' ? 'active' : ''}`} onClick={() => setActiveTab('board')}><BookOpen size={20} />Board</button>
+            <button className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}><MessageSquare size={20} />Chat</button>
+          </nav>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="app-container">
-      {showPicker && <LessonPickerModal onSelect={handleLessonSelect} onDismiss={() => setShowPicker(false)} />}
-
-      <header className="app-header">
-        <div className="logo-section"
-          onMouseEnter={() => setShowDiagnostics(true)}
-          onMouseLeave={() => setShowDiagnostics(false)}>
-          <img src="/logo.png" alt="Nova Logo" className="logo-img" />
-          <h1 className="logo">Nova AI</h1>
-        </div>
-        {showDiagnostics && (
-          <div className="diagnostic-popup">
-            <p><strong>UID:</strong> {user.uid}</p>
-            <p><strong>Project:</strong> {db.app.options.projectId}</p>
-            <p><strong>Storage:</strong> {persistenceMode}</p>
-          </div>
-        )}
-        <div className="user-section">
-          {persistenceMode === 'local' && <span className="local-badge" title="Firestore Permissions Denied. Using Local memory.">Local Sync</span>}
-          <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="Avatar" className="avatar" />
-          <button className="signout-btn" onClick={() => { cancelSpeak(); signOut(auth); }}>Sign Out</button>
-        </div>
-      </header>
-
-      <main className={`main-content ${activeLesson ? 'split-view' : ''}`}>
-        {activeLesson ? (
-          <>
-            {/* PART A: Whiteboard Tab */}
-            <section className={`part-a ${activeChallenge ? 'has-challenge' : ''} ${activeTab === 'board' ? 'tab-active' : ''}`}>
-              <div className="row-c">
-                <LessonNotesPanel
-                  lesson={activeLesson}
-                  whiteboardBlocks={whiteboardBlocks}
-                  currentChapterId={currentChapterId}
-                  onChapterChange={setCurrentChapterId}
-                />
-              </div>
-              {activeChallenge && (
-                <div className="row-d">
-                  <MathChallenge
-                    question={activeChallenge.question}
-                    correctAnswer={activeChallenge.answer}
-                    onResult={handleChallengeResult}
-                  />
-                </div>
-              )}
-            </section>
-
-            {/* PART B: Voice + Chat (desktop) / Chat-only (mobile) */}
-            <section className={`part-b ${activeTab === 'chat' ? 'tab-active' : ''}`}>
-              <div className="row-e">
-                <div className="orb-section">
-                  <VoiceOrb isListening={isListening} isSpeaking={isSpeaking} isProcessing={isProcessing} transcript={transcript} onClick={handleOrbClick} error={recogError} />
-                </div>
-              </div>
-              <div className="row-f">
-                <div className="chat-section">
-                  <ChatHistory messages={messages} />
-                </div>
-              </div>
-            </section>
-
-            {/* MOBILE: Floating Mic FAB */}
-            <button
-              className={`mobile-mic-fab ${isListening ? 'fab-listening' : ''} ${isSpeaking ? 'fab-speaking' : ''} ${isProcessing ? 'fab-thinking' : ''}`}
-              onClick={handleOrbClick}
-              disabled={isProcessing}
-              aria-label="Voice control"
-            >
-              {isProcessing ? <span className="fab-spinner" /> : isListening ? <Square size={26} /> : isSpeaking ? <Volume2 size={26} /> : <Mic size={26} />}
-            </button>
-
-            {/* MOBILE BOTTOM TAB BAR */}
-            <nav className="mobile-tab-bar">
-              <button
-                className={`tab-btn ${activeTab === 'board' ? 'active' : ''}`}
-                onClick={() => setActiveTab('board')}
-              >
-                {activeChallenge && activeTab !== 'board' && <span className="tab-challenge-dot" />}
-                <BookOpen size={20} />
-                Board
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
-                onClick={() => setActiveTab('chat')}
-              >
-                <MessageSquare size={20} />
-                Chat
-              </button>
-            </nav>
-          </>
-        ) : (
-          <div className="welcome-placeholder">
-            <h2>Akwaaba! Select a lesson to begin.</h2>
-            <button className="primary-btn" onClick={() => setShowPicker(true)}>Open Lesson Catalog</button>
-          </div>
-        )}
-      </main>
-    </div>
-  )
+    <Dashboard 
+      user={user} 
+      profile={effectiveProfile} 
+      onSelectStandard={handleSelectStandard}
+      onSettingsClick={() => setCurrentView('settings')}
+    />
+  );
 }
 
-export default App
+export default App;

@@ -1,9 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Brain, Monitor, Mic, PlayCircle, UserPlus, Globe, Menu } from 'lucide-react';
 import './LandingPage.css';
 
 export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.15,
+      rootMargin: "0px 0px -50px 0px"
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    const revealElements = document.querySelectorAll('.reveal');
+    revealElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="landing-container">
@@ -40,37 +60,51 @@ export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyCli
       <main className="landing-main">
         {/* Hero Section */}
         <section className="hero-section">
-          <img src="/hero-bg.jpg" alt="" className="hero-bg-img" />
-          <div className="hero-overlay"></div>
+          <div className="hero-bg-wrapper">
+            <img src="/students-hero.png" alt="Students studying" className="hero-img" />
+            <div className="hero-overlay-refined"></div>
+          </div>
+          <div className="hero-mesh-background">
+            <div className="mesh-sphere sphere-1"></div>
+            <div className="mesh-sphere sphere-2"></div>
+            <div className="mesh-sphere sphere-3"></div>
+          </div>
+          
           <div className="hero-content">
+            <div className="hero-badge">
+              <span className="badge-dot"></span>
+              <span className="badge-text">The World's #1 AI Math Tutor</span>
+            </div>
+            
             <h1 className="hero-title">
-              Meet <span className="highlight-text">Nova.</span> <span className="hero-br"><br /></span>
-              The World's Most Advanced <span className="hero-br"><br /></span>
-              AI Math Tutor.
+              Master Mathematics <br />
+              with <span className="text-gradient">Nova AI.</span>
             </h1>
+            
             <p className="hero-subtitle">
-              A voice-powered learning experience that feels like magic. Nova teaches on a live interactive board,
-              adapting to your child's pace with Ghanaian curriculum mastery.
+              A voice-powered learning experience that feels like magic. Nova teaches on a live interactive board, 
+              adapting to your child's pace with global curriculum mastery.
             </p>
+            
             <div className="hero-actions">
-              <button className="hero-btn-watch" onClick={() => {}}>
-                <PlayCircle size={20} /> Watch Demo
+              <button className="hero-btn-signup primary-glow" onClick={onLoginClick}>
+                Get Started for Free <UserPlus size={18} />
               </button>
-              <button className="hero-btn-signup" onClick={onLoginClick}>
-                <UserPlus size={20} /> Sign Up Free
+              <button className="hero-btn-watch" onClick={() => {}}>
+                <PlayCircle size={18} /> Watch Demo
               </button>
             </div>
           </div>
         </section>
 
         {/* App Preview Section */}
-        <section className="preview-section">
+        <section className="preview-section reveal">
           <div className="preview-wrap">
-            <div className="preview-label">SEE IT IN ACTION</div>
-            <h2 className="preview-title">The Nova Learning Interface</h2>
-            <p className="preview-subtitle">A clean, distraction-free environment built for deep focus and real understanding.</p>
+            <div className="preview-label reveal-up">SEE IT IN ACTION</div>
+            <h2 className="preview-title reveal-up">The Nova Learning Interface</h2>
+            <p className="preview-subtitle reveal-up">A clean, distraction-free environment built for deep focus and real understanding.</p>
             
-            <div className="mockups-container">
+            <div className="mockups-container reveal-scale">
               {/* Desktop Mockup */}
               <div className="app-mockup desktop-mockup">
                 {/* Left — Whiteboard Panel */}
@@ -158,50 +192,50 @@ export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyCli
         </section>
 
         {/* Features Section */}
-        <section id="features" className="features-section">
+        <section id="features" className="features-section reveal">
           <div className="features-content-wrap">
-            <div className="section-header">
+            <div className="section-header reveal-up">
               <h2 className="section-title">Features</h2>
               <p className="section-subtitle">
-                Nova isn't just a chatbot — it's a full learning companion. It listens, teaches, writes on a live board, and adapts to your child's exact pace. Every session is structured, voice-driven, and built around the Ghanaian school curriculum.
+                Nova isn't just a chatbot — it's a full learning companion. It listens, teaches, writes on a live board, and adapts to your child's exact pace. Every session is structured, voice-driven, and built around world-class school standards.
               </p>
             </div>
             <div className="features-grid">
-              <div className="feature-card">
+              <div className="feature-card reveal-up">
                 <div className="f-icon-wrap"><Brain size={28} /></div>
                 <h3>Adaptive AI Tutor</h3>
                 <p>Nova understands where your child is struggling and adjusts in real-time — asking questions, giving hints, and celebrating progress without ever losing patience.</p>
               </div>
-              <div className="feature-card">
+              <div className="feature-card reveal-up">
                 <div className="f-icon-wrap"><Monitor size={28} /></div>
                 <h3>Live Whiteboard</h3>
                 <p>Every lesson unfolds on a live board. Nova writes out equations, steps, and explanations visually as she speaks — just like a real classroom teacher would.</p>
               </div>
-              <div className="feature-card">
+              <div className="feature-card reveal-up">
                 <div className="f-icon-wrap"><Mic size={28} /></div>
                 <h3>Voice Tutor</h3>
                 <p>Tap to speak and Nova listens. Students answer questions, ask for help, and navigate lessons entirely by voice — making learning feel natural and effortless.</p>
               </div>
-              <div className="feature-card">
+              <div className="feature-card reveal-up">
                 <div className="f-icon-wrap"><Globe size={28} /></div>
                 <h3>Global Curriculums Integrated</h3>
-                <p>Pre-loaded and adapted to major world standards including the US Common Core, UK National Curriculum (KS1-KS4), Singapore Math, and the formal Ghanaian GES syllabus.</p>
+                <p>Pre-loaded and adapted to major world standards including the US Common Core, UK National Curriculum (KS1-KS4), Singapore Math, and various international syllabuses.</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Reviews Section */}
-        <section className="reviews-section">
+        <section className="reviews-section reveal">
           <div className="reviews-content-wrap">
-            <div className="section-header">
+            <div className="section-header reveal-up">
               <h2 className="section-title">What Our Users Say</h2>
               <p className="section-subtitle">
                 See how Nova is transforming the way students master mathematics globally.
               </p>
             </div>
             <div className="reviews-grid">
-              <div className="review-card">
+              <div className="review-card reveal-up">
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"My daughter used to dread math homework. Now she logs into Nova every day just to 'talk to her math friend.' Her grades have skyrocketed!"</p>
                 <div className="review-author">
@@ -214,9 +248,9 @@ export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyCli
                   </div>
                 </div>
               </div>
-              <div className="review-card">
+              <div className="review-card reveal-up">
                 <div className="review-stars">★★★★★</div>
-                <p className="review-text">"As a teacher, having Nova walk my students through the Ghanaian curriculum step-by-step is an absolute game-changer for classroom reinforcement."</p>
+                <p className="review-text">"As a teacher, having Nova walk my students through our curriculum step-by-step is an absolute game-changer for classroom reinforcement."</p>
                 <div className="review-author">
                   <div className="review-avatar">
                     <img src="/rev-2.png" alt="Mr. Osei" />
@@ -227,7 +261,7 @@ export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyCli
                   </div>
                 </div>
               </div>
-              <div className="review-card">
+              <div className="review-card reveal-up">
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"The live whiteboard feature is brilliant. It feels exactly like sitting next to a private tutor who is patient enough to explain fractions ten times over."</p>
                 <div className="review-author">
@@ -240,7 +274,7 @@ export default function LandingPage({ onLoginClick, onPricingClick, onPrivacyCli
                   </div>
                 </div>
               </div>
-              <div className="review-card">
+              <div className="review-card reveal-up">
                 <div className="review-stars">★★★★★</div>
                 <p className="review-text">"I love that I can just speak to it instead of typing complex math formulas. It understands my voice instantly and responds clearly. Highly recommended."</p>
                 <div className="review-author">

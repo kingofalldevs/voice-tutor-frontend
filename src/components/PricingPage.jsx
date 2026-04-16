@@ -12,7 +12,7 @@ export default function PricingPage({ onBack, onSelectPlan }) {
         'Unlimited AI Math Lessons',
         'Smart Whiteboard Interactivity',
         'Voice-First Teaching',
-        'Ghanaian Curriculum Alignment',
+        'Global Standards Alignment',
         'Lesson History (30 Days)',
         'Basic Performance Tracking'
       ],
@@ -67,7 +67,7 @@ export default function PricingPage({ onBack, onSelectPlan }) {
               <span className="period">/mo</span>
             </div>
             <p className="card-description">{plan.description}</p>
-            
+
             <ul className="card-features">
               {plan.features.map((feature, fIndex) => (
                 <li key={fIndex}>
@@ -77,7 +77,7 @@ export default function PricingPage({ onBack, onSelectPlan }) {
               ))}
             </ul>
 
-            <button 
+            <button
               className={`card-cta ${plan.badge ? 'primary-btn' : 'secondary-btn'}`}
               onClick={() => onSelectPlan(plan.name)}
             >

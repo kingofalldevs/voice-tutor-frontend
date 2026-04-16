@@ -175,6 +175,7 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
                           </div>
                         </div>
                         <button className="start-btn">
+                          <span className="btn-text">Start Class</span>
                           <ArrowRight size={20} />
                         </button>
                       </footer>

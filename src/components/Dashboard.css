@@ -566,6 +566,34 @@
   to { transform: rotate(360deg); }
 }
 
+.privacy-stat {
+  position: relative;
+  padding-right: 2.5rem !important;
+}
+
+.privacy-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.2s ease;
+}
+
+.privacy-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--dash-accent);
+}
+
 @media (max-width: 1024px) {
   .dashboard-main-layout {
     grid-template-columns: 1fr;

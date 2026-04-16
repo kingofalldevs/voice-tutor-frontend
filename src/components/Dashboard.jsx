@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, BookOpen, Settings, Star, TrendingUp, RefreshCw, Brain, Menu, X } from 'lucide-react';
+import { ArrowRight, BookOpen, Settings, Star, TrendingUp, RefreshCw, Brain, Menu, X, Eye, EyeOff } from 'lucide-react';
 import './Dashboard.css';
 
 export default function Dashboard({ user, profile, onSelectStandard, onSettingsClick }) {
@@ -7,6 +7,7 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
   const [progress, setProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showScore, setShowScore] = useState(true);
 
   const [fetchError, setFetchError] = useState(null);
 
@@ -135,12 +136,19 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
             </div>
             <div className="hero-stats-mini">
               <div className="mini-stat">
-                <strong>12</strong>
+                <strong>{showScore ? '12' : '••'}</strong>
                 <span>Lessons</span>
               </div>
-              <div className="mini-stat">
-                <strong>85%</strong>
+              <div className="mini-stat privacy-stat">
+                <strong>{showScore ? '85%' : '••%'}</strong>
                 <span>Score</span>
+                <button 
+                  className="privacy-toggle" 
+                  onClick={() => setShowScore(!showScore)}
+                  title={showScore ? "Hide progress" : "Show progress"}
+                >
+                  {showScore ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
               </div>
             </div>
           </header>

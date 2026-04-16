@@ -8,30 +8,55 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [fetchError, setFetchError] = useState(null);
+
   useEffect(() => {
     if (profile?.learning_path_id && user?.uid) {
       fetchData();
     }
   }, [profile, user]);
 
-  const fetchData = async () => {
+  const fetchData = async (isManual = false) => {
+    setLoading(true);
+    setFetchError(null);
+    
     // Safety timeout for the loading screen
     const timeout = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
+      if (standards.length === 0) {
+        setLoading(false);
+        setFetchError("Connection timed out. Please check your internet or try the Sync button.");
+      }
+    }, 8000);
 
     try {
+      // Use the ENV URL or fallback to the known production URL
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://voice-tutor-backend.onrender.com';
+      console.log(`Nova Debug: Fetching from ${baseUrl} for path ${profile.learning_path_id}`);
+
+      // Add a cache-buster if manual sync
+      const cacheBust = isManual ? `?t=${Date.now()}` : '';
+      
       const [stdResp, progResp] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/curriculum/${profile.learning_path_id}`),
-        fetch(`${import.meta.env.VITE_API_URL}/progress/${user.uid}`)
+        fetch(`${baseUrl}/curriculum/${profile.learning_path_id}${cacheBust}`),
+        fetch(`${baseUrl}/progress/${user.uid}${cacheBust}`)
       ]);
+
+      if (!stdResp.ok) throw new Error(`Server returned ${stdResp.status}`);
+      
       const [stdData, progData] = await Promise.all([stdResp.json(), progResp.json()]);
-      setStandards(stdData);
+      
+      if (Array.isArray(stdData)) {
+        setStandards(stdData);
+      } else {
+        throw new Error("Invalid curriculum data format received.");
+      }
+      
       setProgress(progData);
       clearTimeout(timeout);
       setLoading(false);
     } catch (err) {
       console.error("Dashboard data fetch error:", err);
+      setFetchError(err.message);
       clearTimeout(timeout);
       setLoading(false);
     }
@@ -130,6 +155,14 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
           </header>
 
           <section className="dashboard-content-grid">
+            {fetchError && (
+              <div className="connection-error-alert">
+                <RefreshCw size={20} className="spin-slow" />
+                <p><strong>Connection Issue:</strong> {fetchError}</p>
+                <button onClick={() => fetchData(true)}>Try Reconnecting</button>
+              </div>
+            )}
+
             {standards.length > 0 ? (
               <div className="standard-grid">
                 {standards.map((std) => {
@@ -162,7 +195,7 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
               <div className="discovery-empty-state">
                 <div className="discovery-header">
                   <h3>Mastery Categories</h3>
-                  <button className="refresh-min" onClick={fetchData}><RefreshCw size={14}/> Sync</button>
+                  <button className="refresh-min" onClick={() => fetchData(true)}><RefreshCw size={14}/> Sync</button>
                 </div>
                 
                 <div className="placeholder-grid">
@@ -180,8 +213,8 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
                 <div className="empty-action-box">
                   <div className="action-icon-wrap"><TrendingUp size={32}/></div>
                   <div className="action-text">
-                    <h4>Tailoring your curriculum...</h4>
-                    <p>Nova is curating the perfect learning path for Grade {profile?.grade}. We'll notify you once your custom math modules are live.</p>
+                    <h4>{fetchError ? 'Unable to reach Nova' : 'Tailoring your curriculum...'}</h4>
+                    <p>{fetchError || `Nova is curating the perfect learning path for Grade ${profile?.grade}. We'll notify you once your custom math modules are live.`}</p>
                   </div>
                 </div>
               </div>

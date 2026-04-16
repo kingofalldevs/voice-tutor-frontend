@@ -502,6 +502,51 @@
   transform: translateX(-50%) scale(1.05);
 }
 
+.connection-error-alert {
+  grid-column: 1 / -1;
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  animation: slideDown 0.4s ease;
+}
+
+.connection-error-alert p {
+  margin: 0;
+  color: #c53030;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.connection-error-alert button {
+  background: #c53030;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.spin-slow {
+  animation: spin 3s linear infinite;
+  color: #c53030;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 1024px) {
   .dashboard-main-layout {
     grid-template-columns: 1fr;

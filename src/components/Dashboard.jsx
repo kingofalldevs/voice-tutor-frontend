@@ -20,13 +20,13 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
     setLoading(true);
     setFetchError(null);
     
-    // Safety timeout for the loading screen
+    // Safety timeout for the loading screen (extended for mobile/cold starts)
     const timeout = setTimeout(() => {
       if (standards.length === 0) {
         setLoading(false);
-        setFetchError("Connection timed out. Please check your internet or try the Sync button.");
+        setFetchError("Connection timed out. Render server might be waking up. Please click Sync again in 10 seconds.");
       }
-    }, 8000);
+    }, 15000);
 
     try {
       // Use the ENV URL or fallback to the known production URL
@@ -119,15 +119,6 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
 
       <main className="dashboard-main-layout">
         <aside className={`dash-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-          <div className="sidebar-card daily-focus">
-            <h4>DAILY FOCUS</h4>
-            <div className="focus-item">
-              <span className="dot"></span>
-              <p>Algebra Foundations</p>
-            </div>
-            <button className="resume-btn">Resume Lesson</button>
-          </div>
-          
           <div className="sidebar-links">
             <div className="side-link active"><BookOpen size={18}/> My Courses</div>
             <div className="side-link"><TrendingUp size={18}/> Analytics</div>

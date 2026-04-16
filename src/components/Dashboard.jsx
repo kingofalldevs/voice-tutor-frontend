@@ -130,8 +130,8 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
           <header className="dash-hero">
             <div className="hero-text">
               <span className="hero-greeting">WELCOME BACK, {profile?.name?.toUpperCase() || 'STUDENT'}</span>
-              <h2>Ready to master math today?</h2>
-              <p>Continuning your <strong>{profile?.country === 'US' ? 'US Common Core' : 'International'}</strong> progress for Grade {profile?.grade}.</p>
+              <h1>Ready to master math today?</h1>
+              <p>Choose a course to start a class with Professor Nova</p>
             </div>
             <div className="hero-stats-mini">
               <div className="mini-stat">

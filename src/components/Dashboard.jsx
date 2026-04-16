@@ -119,13 +119,6 @@ export default function Dashboard({ user, profile, onSelectStandard, onSettingsC
       </nav>
 
       <main className="dashboard-main-layout">
-        <aside className={`dash-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-          <div className="sidebar-links">
-            <div className="side-link active"><BookOpen size={18}/> My Courses</div>
-            <div className="side-link"><TrendingUp size={18}/> Analytics</div>
-            <div className="side-link"><Star size={18}/> Achievements</div>
-          </div>
-        </aside>
 
         <div className="dash-content-area">
           <header className="dash-hero">

@@ -111,12 +111,12 @@
 
 .dashboard-main-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 1fr;
   gap: 2rem;
-  max-width: 1440px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem;
-  padding-top: 5rem; /* Account for fixed nav */
+  padding: 2rem;
+  padding-top: 6rem;
 }
 
 /* Sidebar */

@@ -3,7 +3,7 @@ import MathRenderer from './MathRenderer';
 import { Download, Share2 } from 'lucide-react';
 import './LessonNotesPanel.css';
 
-export default function LessonNotesPanel({ lesson, whiteboardBlocks = [] }) {
+export default function LessonNotesPanel({ lesson, whiteboardBlocks = [], onBoardInteract }) {
   const boardEndRef = useRef(null);
 
   useEffect(() => {
@@ -12,35 +12,49 @@ export default function LessonNotesPanel({ lesson, whiteboardBlocks = [] }) {
 
   if (!lesson) return null;
 
+  const skills = lesson.skills || [];
+  const totalSkills = skills.length || 1;
+  const completedCount = Math.min(Math.floor(whiteboardBlocks.length / 3), totalSkills);
+  const progressPct = totalSkills > 0 ? Math.round((Math.max(completedCount, whiteboardBlocks.length > 0 ? 1 : 0) / totalSkills) * 100) : 0;
+
   return (
     <aside className="lesson-notes-sidebar">
-      <div className="panel-header">
-        <div className="header-top">
-          <div className="topic-label">Active Lesson Topic</div>
-          <div className="premium-actions">
-            <button className="icon-btn" title="Export Board"><Download size={14} /></button>
-            <button className="icon-btn" title="Share with Parents"><Share2 size={14} /></button>
-          </div>
-        </div>
-        <h2>{lesson.title}</h2>
-      </div>
-
+      {/* Live Board */}
       <div className="board-container">
-        {/* NOVA'S LIVE WHITEBOARD - THE MAIN FOCUS */}
         <div className="whiteboard-section">
           <div className="whiteboard-header">
             <span>Nova's Live Board</span>
-            <div className="live-indicator">● LIVE</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className="premium-actions">
+                <button className="icon-btn" title="Download board"><Download size={14} /></button>
+                <button className="icon-btn" title="Share"><Share2 size={14} /></button>
+              </div>
+              <div className="live-indicator">Live</div>
+            </div>
           </div>
+
+          {/* Skill chips */}
+          {skills.length > 0 && (
+            <div className="skill-chips-list">
+              {skills.map((skill, idx) => (
+                <div key={skill.id || idx} className="skill-chip">
+                  <span className="skill-chip-number">{idx + 1}</span>
+                  <span className="skill-chip-label">{skill.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Whiteboard canvas */}
           <div className="whiteboard-canvas">
             {whiteboardBlocks.length === 0 ? (
               <div className="empty-board">
-                <p>Welcome! Ask Nova a question and she will write the steps here.</p>
+                <p>Nova will write here as she teaches. Just say hello or ask a question!</p>
               </div>
             ) : (
               whiteboardBlocks.map((block) => (
                 <div key={block.id} className="board-entry entry-animate">
-                  <MathRenderer content={block.content} />
+                  <MathRenderer content={block.content} onInteract={onBoardInteract} />
                 </div>
               ))
             )}

@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Studio Monochrome Palette */
-  --bg-deep: #f5f5f5;
+  /* Mint & Pearl Palette */
+  --bg-deep: #f8fafc;
   --bg-surface: #ffffff;
-  --primary-accent: #000000;
-  --primary-glow: rgba(0, 0, 0, 0.05);
-  --secondary-accent: #333333;
-  --text-main: #000000;
-  --text-dim: #666666;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-blur: blur(20px);
+  --primary-accent: #2ecc71;
+  --primary-glow: rgba(46, 204, 113, 0.15);
+  --secondary-accent: #a8e6cf;
+  --text-main: #1a202c;
+  --text-dim: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(46, 204, 113, 0.1);
+  --glass-blur: blur(12px);
 
   font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
@@ -132,9 +132,9 @@ button {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--secondary-accent);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--primary-accent);
 }

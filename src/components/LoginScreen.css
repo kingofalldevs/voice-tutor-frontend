@@ -38,7 +38,7 @@
   font-size: 2.5rem;
   font-family: 'Outfit', sans-serif;
   margin-bottom: 0.25rem;
-  background: linear-gradient(135deg, #000, #555);
+  background: linear-gradient(135deg, var(--text-main), var(--primary-accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -114,7 +114,7 @@
 
 .auth-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
 }
 
 .auth-btn:disabled {

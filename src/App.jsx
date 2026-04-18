@@ -8,26 +8,21 @@ import PricingPage from './components/PricingPage'
 import LoginScreen from './components/LoginScreen'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import SettingsPage from './components/SettingsPage'
-import Dashboard from './components/Dashboard'
-import VoiceOrb from './components/VoiceOrb'
+import CourseExplorerModal from './components/CourseExplorerModal'
 import ChatHistory from './components/ChatHistory'
 import LessonNotesPanel from './components/LessonNotesPanel'
 import useSpeechRecognition from './hooks/useSpeechRecognition'
 import useSpeechSynthesis from './hooks/useSpeechSynthesis'
 import useChat from './hooks/useChat'
-import MathRenderer from './components/MathRenderer'
-import MathChallenge from './components/MathChallenge'
-import { BookOpen, Mic, Square, Volume2, MessageSquare, ChevronLeft } from 'lucide-react'
+import { BookOpen, MessageSquare, ChevronRight, ChevronDown } from 'lucide-react'
 import './App.css'
 
 function App() {
   const [user, setUser] = useState(null)
   const [userProfile, setUserProfile] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
-  const [messages, setMessages] = useState([])
-  const [persistenceMode, setPersistenceMode] = useState('firebase') 
-  const [showDiagnostics, setShowDiagnostics] = useState(false)
-  const [currentView, setCurrentView] = useState('landing') // 'landing' | 'pricing' | 'login' | 'privacy'
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [currentView, setCurrentView] = useState('landing')
 
   // Curriculum & Lesson State
   const [activeStandard, setActiveStandard] = useState(null)
@@ -35,7 +30,9 @@ function App() {
   const [whiteboardBlocks, setWhiteboardBlocks] = useState([])
   const [lastActivity, setLastActivity] = useState(Date.now())
   const [pendingLessonStart, setPendingLessonStart] = useState(false)
-  const [activeTab, setActiveTab] = useState('board') // 'board' | 'chat'
+  const [activeTab, setActiveTab] = useState('board')
+  const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(false)
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
 
   const { isListening, transcript, startListening, stopListening, error: recogError, setTranscript } = useSpeechRecognition((finalText) => {
     if (finalText.trim() !== '' && !isProcessing) {
@@ -47,12 +44,13 @@ function App() {
 
   const { isSpeaking, speak, cancel: cancelSpeak } = useSpeechSynthesis();
 
-  // Chat Logic Hook
-  const { isProcessing, sendMessage } = useChat({
+  const [messages, setMessages] = useState([]);
+
+  const { isProcessing, sendMessage, streamedReply } = useChat({
     user,
     messages,
     saveMessage: (role, content) => saveMessage(role, content),
-    activeLesson: activeStandard, 
+    activeLesson: activeStandard,
     currentSkillId: activeSkill?.id,
     setWhiteboardBlocks,
     setLastActivity,
@@ -61,40 +59,32 @@ function App() {
 
   // Auth Listener + Profile Fetch
   useEffect(() => {
-    // 1. GLOBAL SAFETY VALVE: Never hang more than 3s
     const safetyValve = setTimeout(() => {
-      console.warn("Safety valve triggered: Force clearing loading states.");
       setAuthLoading(false);
       setProfileLoading(false);
     }, 3000);
 
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser)
-      setProfileLoading(true)
-      
+      setUser(currentUser);
+      setProfileLoading(true);
       try {
         if (currentUser) {
-          const profDoc = await getDoc(doc(db, 'users', currentUser.uid))
-          if (profDoc.exists()) {
-            setUserProfile(profDoc.data())
-          }
+          const profDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (profDoc.exists()) setUserProfile(profDoc.data());
         } else {
-          setUserProfile(null)
+          setUserProfile(null);
         }
       } catch (err) {
-        console.error("Profile fetch error:", err);
+        console.error('Profile fetch error:', err);
       } finally {
-        setProfileLoading(false)
-        setAuthLoading(false)
+        setProfileLoading(false);
+        setAuthLoading(false);
         clearTimeout(safetyValve);
       }
     });
 
-    return () => {
-      unsub();
-      clearTimeout(safetyValve);
-    }
-  }, [])
+    return () => { unsub(); clearTimeout(safetyValve); };
+  }, []);
 
   // Messages Sync (Isolated by Skill)
   useEffect(() => {
@@ -105,53 +95,50 @@ function App() {
       collection(db, `chats/${user.uid}/skills/${activeSkill.id}/messages`),
       orderBy('timestamp', 'desc'),
       limit(50)
-    )
+    );
     const unsub = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setMessages(msgs.reverse())
+      const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setMessages(msgs.reverse());
     });
-    return () => unsub()
-  }, [user, activeSkill])
+    return () => unsub();
+  }, [user, activeSkill]);
 
   const saveMessage = async (role, content) => {
     if (!user || !activeSkill) return;
-    const msgData = { role, content, timestamp: serverTimestamp() };
     try {
-      await addDoc(collection(db, `chats/${user.uid}/skills/${activeSkill.id}/messages`), msgData);
+      await addDoc(
+        collection(db, `chats/${user.uid}/skills/${activeSkill.id}/messages`),
+        { role, content, timestamp: serverTimestamp() }
+      );
     } catch (err) {
-      console.error("Save message error:", err);
+      console.error('Save message error:', err);
     }
   };
 
   const handleSelectStandard = (std) => {
-    const firstSkill = std.skills?.[0];
+    const firstSkill = (std.skills && std.skills.length > 0) ? std.skills[0] : { id: std.id, title: std.title };
     setActiveStandard(std);
     setActiveSkill(firstSkill);
     setWhiteboardBlocks([]);
     setMessages([]);
     setPendingLessonStart(true);
-  }
+    setIsCourseMenuOpen(false); // Close modal when a course is chosen
+  };
 
-  // Handle Lesson Start
+  // Auto-start lesson
   useEffect(() => {
     if (pendingLessonStart && activeSkill) {
       const timer = setTimeout(() => {
-        sendMessage("start");
+        sendMessage('start');
         setPendingLessonStart(false);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [pendingLessonStart, activeSkill, sendMessage])
+  }, [pendingLessonStart, activeSkill, sendMessage]);
 
-  const handleChallengeResult = (isCorrect, userAnswer) => {
-    setLastActivity(Date.now());
-    const signal = isCorrect
-      ? `[CHALLENGE_RESULT: CORRECT, answer: ${userAnswer}]`
-      : `[CHALLENGE_RESULT: INCORRECT, answer: ${userAnswer}]`;
-    setTimeout(() => {
-      setActiveChallenge(null);
-      sendMessage(signal);
-    }, 600);
+  const handleBoardInteraction = (data) => {
+    const { id, selected } = data;
+    sendMessage(`[ACTION: id=${id}, selected=${selected}]`);
   };
 
   const handleOrbClick = () => {
@@ -167,19 +154,20 @@ function App() {
 
   if (authLoading) return <div className="loading-screen">Loading Nova...</div>;
 
-  // VIEW ROUTING
+  // Unauthenticated routing
   if (!user) {
-    if (currentView === 'login') return <LoginScreen onBack={() => setCurrentView('landing')} />;
+    if (currentView === 'login')   return <LoginScreen onBack={() => setCurrentView('landing')} />;
     if (currentView === 'pricing') return <PricingPage onBack={() => setCurrentView('landing')} onSelectPlan={() => setCurrentView('login')} />;
     if (currentView === 'privacy') return <PrivacyPolicy onBackClick={() => setCurrentView('landing')} />;
-    return <LandingPage 
-      onLoginClick={() => setCurrentView('login')} 
-      onPricingClick={() => setCurrentView('pricing')} 
-      onPrivacyClick={() => setCurrentView('privacy')} 
-    />;
+    return (
+      <LandingPage
+        onLoginClick={() => setCurrentView('login')}
+        onPricingClick={() => setCurrentView('pricing')}
+        onPrivacyClick={() => setCurrentView('privacy')}
+      />
+    );
   }
 
-  // Authenticated State Preparation
   const effectiveProfile = userProfile || {
     name: user.displayName || 'Student',
     country: 'US',
@@ -187,75 +175,127 @@ function App() {
     learning_path_id: 'us_grade_6'
   };
 
-  // Authenticated: Dashboard or Tutor
+  // Settings page
   if (currentView === 'settings') {
     return (
-      <SettingsPage 
-        user={user} 
-        profile={effectiveProfile} 
+      <SettingsPage
+        user={user}
+        profile={effectiveProfile}
         onBack={() => setCurrentView('dashboard')}
         onUpdateProfile={(newProfile) => setUserProfile(newProfile)}
       />
     );
   }
 
-  if (activeStandard) {
+  // ── TUTOR VIEW ──
+    const firstName = (effectiveProfile.name || 'Student').split(' ')[0];
+    const initials = firstName.charAt(0).toUpperCase();
+
     return (
       <div className="app-container">
+        {/* OVERLAYS */}
+        {(!activeStandard || isCourseMenuOpen) && (
+          <CourseExplorerModal 
+            user={user}
+            onClose={() => setIsCourseMenuOpen(false)}
+            onSelectCourse={handleSelectStandard}
+          />
+        )}
+
+        {/* HEADER */}
         <header className="app-header">
-          <div className="logo-section" onClick={() => setActiveStandard(null)}>
-            <ChevronLeft size={24} style={{ cursor: 'pointer' }} />
-            <span className="skill-tag">{activeStandard.id}</span>
-            <h1 className="logo-compact">{activeSkill?.title || 'Learning'}</h1>
+          <div className="header-left">
+            <span className="header-brand">MathNova</span>
+            <div className="header-divider" />
+            <button className="courses-nav-btn" onClick={() => setIsCourseMenuOpen(true)}>
+              <BookOpen size={16} /> Courses
+            </button>
+            {activeStandard && (
+              <>
+                <ChevronRight size={14} className="header-crumb-sep" />
+                <span className="info-badge">Grade {activeStandard.grade || '1'}</span>
+                <span className="header-crumb">{activeStandard.title}</span>
+              </>
+            )}
           </div>
-          <div className="user-section">
-            <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="Avatar" className="avatar" />
-            <button className="signout-btn" onClick={() => { cancelSpeak(); signOut(auth); }}>Sign Out</button>
+
+          <div className="header-right">
+            <div 
+              className={`user-account-switcher ${isAccountMenuOpen ? 'open' : ''}`} 
+              onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+            >
+              <div className="student-avatar-pill">
+                <div className="student-initials">{initials}</div>
+                <span className="user-name-label hide-mobile">{firstName}</span>
+              </div>
+              <ChevronDown size={14} className="account-chevron" />
+              
+              {isAccountMenuOpen && (
+                <div className="account-dropdown">
+                  <button className="dropdown-action danger" onClick={() => { cancelSpeak(); signOut(auth); }}>
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
+        {/* MAIN SPLIT */}
         <main className="main-content split-view">
+          {/* LEFT — Whiteboard */}
           <section className={`part-a ${activeTab === 'board' ? 'tab-active' : ''}`}>
             <div className="row-c">
               <LessonNotesPanel
                 lesson={activeStandard}
                 whiteboardBlocks={whiteboardBlocks}
-                currentChapterId={1}
-                onChapterChange={() => {}}
+                onBoardInteract={handleBoardInteraction}
               />
             </div>
           </section>
 
+          {/* RIGHT — Nova Chat */}
           <section className={`part-b ${activeTab === 'chat' ? 'tab-active' : ''}`}>
-            <div className="row-e">
-              <div className="orb-section">
-                <VoiceOrb isListening={isListening} isSpeaking={isSpeaking} isProcessing={isProcessing} transcript={transcript} onClick={handleOrbClick} error={recogError} />
-              </div>
-            </div>
-            <div className="row-f">
-              <div className="chat-section">
-                <ChatHistory messages={messages} />
-              </div>
-            </div>
+            <ChatHistory
+              messages={messages}
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isProcessing={isProcessing}
+              streamedReply={streamedReply}
+              onSend={(text) => {
+                if (text !== 'start' && !text.startsWith('[')) {
+                  setMessages(prev => [...prev, { 
+                    id: `opt_${Date.now()}`, 
+                    role: 'user', 
+                    content: text, 
+                    timestamp: new Date() 
+                  }]);
+                }
+                sendMessage(text);
+              }}
+              onToggleMic={handleOrbClick}
+            />
           </section>
 
+          {/* Mobile tab bar */}
           <nav className="mobile-tab-bar">
-            <button className={`tab-btn ${activeTab === 'board' ? 'active' : ''}`} onClick={() => setActiveTab('board')}><BookOpen size={20} />Board</button>
-            <button className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}><MessageSquare size={20} />Chat</button>
+            <button
+              className={`tab-btn ${activeTab === 'board' ? 'active' : ''}`}
+              onClick={() => setActiveTab('board')}
+            >
+              <BookOpen size={20} /> Board
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+              onClick={() => setActiveTab('chat')}
+            >
+              <MessageSquare size={20} /> Chat
+            </button>
           </nav>
         </main>
       </div>
-    );
-  }
 
-  return (
-    <Dashboard 
-      user={user} 
-      profile={effectiveProfile} 
-      onSelectStandard={handleSelectStandard}
-      onSettingsClick={() => setCurrentView('settings')}
-    />
-  );
+    );
 }
 
 export default App;
